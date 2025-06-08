@@ -40,6 +40,43 @@ const chartConfig = {
 export default function DashboardPage() {
   const sixMonthsAgo = startOfMonth(addMonths(new Date(), -5));
   const today = endOfMonth(new Date());
+  
+  // Estado para manejar las estadísticas de inventario
+  const [inventoryStats, setInventoryStats] = React.useState({
+    loading: true,
+    error: null as string | null,
+    totalItems: 0,
+    totalInventoryValue: 0,
+  });
+  
+  // Efecto para cargar las estadísticas de inventario
+  React.useEffect(() => {
+    const fetchInventoryStats = async () => {
+      try {
+        const response = await fetch('/api/dashboard/stats');
+        if (!response.ok) {
+          throw new Error('Error al cargar las estadísticas de inventario');
+        }
+        const data = await response.json();
+        setInventoryStats({
+          loading: false,
+          error: null,
+          totalItems: data.totalItems,
+          totalInventoryValue: data.totalInventoryValue,
+        });
+      } catch (error) {
+        console.error('Error fetching inventory stats:', error);
+        setInventoryStats({
+          loading: false,
+          error: 'Error al cargar los datos',
+          totalItems: 0,
+          totalInventoryValue: 0,
+        });
+      }
+    };
+
+    fetchInventoryStats();
+  }, []);
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: sixMonthsAgo,
@@ -71,8 +108,6 @@ export default function DashboardPage() {
   
   // These are placeholders and would need real data sources for date filtering
   const averageProfitMargin = MOCK_CASH_FLOW_DATA.length > 0 ? 25 : 0; // Simplified placeholder
-  const totalInventoryItems = 150; 
-  const inventoryValue = 12500000;
 
   return (
     <div className="space-y-6">
@@ -183,18 +218,38 @@ export default function DashboardPage() {
             <Archive className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalInventoryItems}</div>
-            <p className="text-xs text-muted-foreground">Unidades totales (placeholder)</p>
+            {inventoryStats.loading ? (
+              <div className="h-8 flex items-center">
+                <div className="animate-pulse h-4 w-24 bg-muted rounded"></div>
+              </div>
+            ) : inventoryStats.error ? (
+              <p className="text-sm text-destructive">{inventoryStats.error}</p>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{inventoryStats.totalItems}</div>
+                <p className="text-xs text-muted-foreground">Unidades totales en inventario</p>
+              </>
+            )}
           </CardContent>
         </Card>
         <Card className="lg:col-start-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Valor del Inventario</CardTitle>
-            <DollarSign className="h-5 w-5 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrencyCLP(inventoryValue)}</div>
-            <p className="text-xs text-muted-foreground">Basado en compra (placeholder)</p>
+            {inventoryStats.loading ? (
+              <div className="h-8 flex items-center">
+                <div className="animate-pulse h-4 w-24 bg-muted rounded"></div>
+              </div>
+            ) : inventoryStats.error ? (
+              <p className="text-sm text-destructive">{inventoryStats.error}</p>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{formatCurrencyCLP(inventoryStats.totalInventoryValue)}</div>
+                <p className="text-xs text-muted-foreground">Valor total estimado</p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

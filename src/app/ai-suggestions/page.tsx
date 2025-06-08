@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { analyzeFinancialData, AnalyzeFinancialDataOutput } from '@/ai/flows/analyze-financial-data';
+import { analyzeFinancialData, AnalyzeFinancialDataOutput } from '../../ai/flows/analyze-financial-data';
 import { Sparkles, AlertTriangle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -111,7 +111,16 @@ export default function AiSuggestionsPage() {
               <CardTitle>Resumen del Análisis</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap">{analysisResult.analysisSummary}</p>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold mb-2">Información clave:</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    {analysisResult.insights.map((insight: string, index: number) => (
+                      <li key={index}>{insight}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -121,7 +130,11 @@ export default function AiSuggestionsPage() {
                 <CardTitle>Potenciales Ahorros de Costos</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-wrap">{analysisResult.potentialCostSavings}</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  {analysisResult.recommendations.filter((_: any, i: number) => i % 2 === 0).map((rec: string, i: number) => (
+                    <li key={i}>{rec}</li>
+                  ))}
+                </ul>
               </CardContent>
             </Card>
             <Card>
@@ -129,7 +142,11 @@ export default function AiSuggestionsPage() {
                 <CardTitle>Ineficiencias de Precios</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-wrap">{analysisResult.pricingInefficiencies}</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  {analysisResult.recommendations.filter((_: any, i: number) => i % 2 !== 0).map((rec: string, i: number) => (
+                    <li key={i}>{rec}</li>
+                  ))}
+                </ul>
               </CardContent>
             </Card>
           </div>
@@ -139,7 +156,12 @@ export default function AiSuggestionsPage() {
               <CardTitle>Patrones Inusuales Detectados</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap">{analysisResult.unusualPatterns}</p>
+              <div className="space-y-4">
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <h4 className="font-medium mb-2">Evaluación de Riesgo:</h4>
+                  <p>{analysisResult.riskAssessment}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -151,7 +173,7 @@ export default function AiSuggestionsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap">{analysisResult.suggestions}</p>
+              <p className="whitespace-pre-wrap">{analysisResult?.recommendations?.join('\n\n') || 'No hay sugerencias disponibles'}</p>
             </CardContent>
           </Card>
         </div>
