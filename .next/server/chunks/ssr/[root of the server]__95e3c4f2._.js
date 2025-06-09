@@ -610,14 +610,27 @@ async function getInventoryItems() {
         throw error;
     }
 }
+// Función para generar un SKU único basado en el nombre
+function generateSKU(name) {
+    // Tomar las primeras 3 letras del nombre en mayúsculas
+    const prefix = name.slice(0, 3).toUpperCase().padEnd(3, 'X');
+    // Agregar un timestamp para hacerlo único
+    const timestamp = Date.now().toString().slice(-4);
+    return `${prefix}-${timestamp}`;
+}
 async function createInventoryItem(itemData) {
+    // Generar SKU automáticamente si no se proporciona
+    const dataWithSKU = {
+        ...itemData,
+        sku: itemData.sku || generateSKU(itemData.name)
+    };
     try {
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(itemData)
+            body: JSON.stringify(dataWithSKU)
         });
         if (!response.ok) {
             const error = await response.json();

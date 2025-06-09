@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 7, "column": 0}, "map": {"version":3,"sources":["file://C%3A/Users/ferna/Desktop/cvision/src/app/page.tsx"],"sourcesContent":["'use client';\n\nimport { useEffect } from 'react';\nimport { useRouter } from 'next/navigation';\n\nexport default function HomePage() {\n  const router = useRouter();\n\n  useEffect(() => {\n    router.replace('/dashboard');\n  }, [router]);\n\n  return null;\n}"],"names":[],"mappings":";;;AAEA;AACA;AAHA;;;AAKe,SAAS;IACtB,MAAM,SAAS,CAAA,GAAA,kIAAA,CAAA,YAAS,AAAD;IAEvB,CAAA,GAAA,qMAAA,CAAA,YAAS,AAAD,EAAE;QACR,OAAO,OAAO,CAAC;IACjB,GAAG;QAAC;KAAO;IAEX,OAAO;AACT","debugId":null}}]
-}
