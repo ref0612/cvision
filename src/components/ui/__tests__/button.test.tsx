@@ -1,10 +1,16 @@
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import { screen } from '@testing-library/dom';
 import '@testing-library/jest-dom';
 import { Button } from '../button';
 
-// TypeScript workaround for jest global types
-declare const expect: jest.Expect;
+// Verificar que el componente Button existe
+if (!Button) {
+  throw new Error('Button component is not exported correctly');
+}
+
+// Debug
+console.log('Button component:', Button);
 
 describe('Button', () => {
   it('renders the button with default variant', () => {

@@ -16,27 +16,14 @@ export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [callbackUrl, setCallbackUrl] = useState('/dashboard');
   
   // Redirigir si ya está autenticado
   useEffect(() => {
     if (isAuthenticated) {
-      const url = searchParams.get('callbackUrl') || '/dashboard';
-      router.push(decodeURIComponent(url));
+      router.push('/dashboard');
     }
-  }, [isAuthenticated, router, searchParams]);
+  }, [isAuthenticated, router]);
   
-  // Obtener la URL de retorno
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const url = params.get('callbackUrl');
-      if (url) {
-        setCallbackUrl(url);
-      }
-    }
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');

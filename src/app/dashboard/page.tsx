@@ -110,7 +110,7 @@ export default function DashboardPage() {
   const averageProfitMargin = MOCK_CASH_FLOW_DATA.length > 0 ? 25 : 0; // Simplified placeholder
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <h1 className="text-3xl font-headline font-semibold">Dashboard</h1>
         <Popover>
@@ -202,52 +202,21 @@ export default function DashboardPage() {
             </p>
           </CardContent>
         </Card>
+        {/* Placeholder for Inventory Stats Card - Assuming this will be added or is part of another component */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Margen de Ganancia Prom.</CardTitle>
-            <LucideBarChartIcon className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{averageProfitMargin}%</div>
-            <p className="text-xs text-muted-foreground">Promedio (placeholder)</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Artículos en Inventario</CardTitle>
+            <CardTitle className="text-sm font-medium">Estadísticas de Inventario</CardTitle>
             <Archive className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {inventoryStats.loading ? (
-              <div className="h-8 flex items-center">
-                <div className="animate-pulse h-4 w-24 bg-muted rounded"></div>
-              </div>
+              <p>Cargando...</p>
             ) : inventoryStats.error ? (
-              <p className="text-sm text-destructive">{inventoryStats.error}</p>
+              <p className="text-red-500">{inventoryStats.error}</p>
             ) : (
               <>
-                <div className="text-2xl font-bold">{inventoryStats.totalItems}</div>
-                <p className="text-xs text-muted-foreground">Unidades totales en inventario</p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="lg:col-start-3">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Valor del Inventario</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {inventoryStats.loading ? (
-              <div className="h-8 flex items-center">
-                <div className="animate-pulse h-4 w-24 bg-muted rounded"></div>
-              </div>
-            ) : inventoryStats.error ? (
-              <p className="text-sm text-destructive">{inventoryStats.error}</p>
-            ) : (
-              <>
-                <div className="text-2xl font-bold">{formatCurrencyCLP(inventoryStats.totalInventoryValue)}</div>
-                <p className="text-xs text-muted-foreground">Valor total estimado</p>
+                <div className="text-2xl font-bold">{inventoryStats.totalItems} items</div>
+                <p className="text-xs text-muted-foreground">Valor total: {formatCurrencyCLP(inventoryStats.totalInventoryValue)}</p>
               </>
             )}
           </CardContent>
@@ -256,36 +225,38 @@ export default function DashboardPage() {
 
       <Card className="col-span-1 lg:col-span-2">
         <CardHeader>
-          <CardTitle>Flujo de Caja</CardTitle>
+          <CardTitle>Flujo de Caja (Últimos 6 Meses)</CardTitle>
           <CardDescription>
-            Comparativa de ingresos y egresos mensuales.
-             {dateRange?.from && dateRange?.to ? 
-               ` (${format(dateRange.from, "MMM yyyy", {locale:es})} - ${format(dateRange.to, "MMM yyyy", {locale:es})})` 
-               : ""}
+            Ingresos vs. Egresos mensuales.
           </CardDescription>
         </CardHeader>
-        <CardContent className="h-[350px] w-full">
-          {MOCK_CASH_FLOW_DATA.length > 0 ? (
-            <ChartContainer config={chartConfig} className="h-full w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <ShadBarChart data={MOCK_CASH_FLOW_DATA.map(d => ({...d, month: format(d.date, "MMM yy", {locale: es})}))} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-                  <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => formatCurrencyCLP(value).replace('CLP ','')} />
-                  <ChartTooltip 
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="dot" formatter={(value, name) => `${formatCurrencyCLP(Number(value))}`} />} 
-                  />
-                  <Bar dataKey="income" fill="var(--color-income)" radius={[4, 4, 0, 0]} name="Ingresos"/>
-                  <Bar dataKey="expenses" fill="var(--color-expenses)" radius={[4, 4, 0, 0]} name="Egresos"/>
-                </ShadBarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              No hay datos para el rango de fechas seleccionado.
-            </div>
-          )}
+        <CardContent className="pl-2">
+          <ChartContainer config={chartConfig} className="h-[350px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ShadBarChart data={MOCK_CASH_FLOW_DATA} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis 
+                  dataKey="monthLabel" 
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                />
+                <YAxis 
+                  tickFormatter={(value) => formatCurrencyCLP(value)}
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  width={80}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent indicator="dot" />}
+                />
+                <Bar dataKey="income" fill="var(--color-income)" radius={4} />
+                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} />
+              </ShadBarChart>
+            </ResponsiveContainer>
+          </ChartContainer>
         </CardContent>
       </Card>
     </div>

@@ -23,7 +23,63 @@ model InventoryItem {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
+  // Relación inversa para ProductComponent
+  productComponents ProductComponent[]
+
   @@map("inventory_items")
 }
 
 // Resto del esquema...
+
+model SellableProduct {
+  id                     String    @id @default(uuid())
+  name                   String
+  description            String?
+  desiredProfitMargin    Float     // O Decimal si necesitas precisión exacta
+  totalComponentCost     Float     // O Decimal
+  netSalePriceWithoutIVA Float     // O Decimal
+  ivaAmountOnSale        Float     // O Decimal
+  finalSalePriceWithIVA  Float     // O Decimal
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  components             ProductComponent[] // Relación uno-a-muchos con ProductComponent
+
+  @@map("sellable_products")
+}
+
+model ProductComponent {
+  id                              String  @id @default(uuid())
+  itemName                        String  // Nombre del ítem en el momento del ensamblaje
+  quantity                        Int     // Cantidad de este ítem usada en el producto vendible
+  purchasePriceAtTimeOfAssembly   Float   // Precio de compra en el momento del ensamblaje (O Decimal)
+
+  sellableProduct    SellableProduct @relation(fields: [sellableProductId], references: [id])
+  sellableProductId  String          // Foreign key para SellableProduct
+
+  // Relación opcional con un InventoryItem específico en el momento del ensamblaje
+  inventoryItem      InventoryItem? @relation(fields: [inventoryItemId], references: [id])
+  inventoryItemId    String?         // Foreign key opcional para InventoryItem
+
+  @@map("product_components")
+}
+
+// Añadir relación inversa a InventoryItem
+// model InventoryItem {
+//   id                String   @id @default(uuid())
+//   name              String
+//   quantity          Int
+//   purchasePrice     Int      // Considera usar Decimal para precios
+//   description       String?
+//   sku               String?  @unique
+//   supplier          String?
+//   size              String?
+//   createdAt         DateTime @default(now())
+//   updatedAt         DateTime @updatedAt
+  
+//   // Relación inversa para ProductComponent (opcional, pero útil)
+//   productComponents ProductComponent[]
+
+//   @@map("inventory_items")
+// }
+

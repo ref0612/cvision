@@ -20,15 +20,14 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
         .split('; ')
         .find(row => row.startsWith('session='));
       
-      const isAuthenticated = sessionCookie === 'session=true';
+      // Permite cualquier valor 'session=true'
+      const isAuthenticated = sessionCookie && sessionCookie.includes('true');
       
-      if (!isAuthenticated) {
-        // No redirigir si ya estamos en la página de login
-        if (pathname !== '/login') {
-          const loginUrl = new URL('/login', window.location.origin);
-          loginUrl.searchParams.set('callbackUrl', window.location.pathname + window.location.search);
-          window.location.href = loginUrl.toString();
-        }
+      // SOLO redirige si NO estás en login
+      if (!isAuthenticated && !pathname.startsWith('/login')) {
+        const loginUrl = new URL('/login', window.location.origin);
+        loginUrl.searchParams.set('callbackUrl', pathname);
+        window.location.href = loginUrl.toString();
       } else {
         setIsLoading(false);
       }

@@ -29,10 +29,15 @@ export default function SidebarNav() {
   return (
     <nav className="space-y-1">
       {navItems.map((item) => {
-        const isActive = pathname === item.href || 
-          (pathname.startsWith(item.href) && item.href !== '/dashboard' && 
-           item.href.length > 1 && pathname.substring(item.href.length).startsWith('/')) || 
-          (pathname.startsWith(item.href) && item.href.length > 1 && pathname.length === item.href.length);
+        // Para el dashboard, coincidir exactamente con /dashboard
+        if (item.href === '/dashboard') {
+          var isActive = pathname === item.href;
+        } 
+        // Para otras rutas, verificar si la ruta actual comienza con el href
+        else {
+          isActive = pathname.startsWith(item.href) || 
+                   (pathname + '/').startsWith(item.href + '/');
+        }
         
         return (
           <Link

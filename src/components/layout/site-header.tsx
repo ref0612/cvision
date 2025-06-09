@@ -2,18 +2,22 @@
 
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
+import { useAuth } from '@/providers/auth-provider'; // Importar useAuth
 
 interface SiteHeaderProps {
   onMenuClick?: () => void;
 }
 
 export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
-  const handleLogout = () => {
-    // Eliminar cookie de sesión
-    document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    // Redirigir a la página de login
-    window.location.href = '/login';
-  };
+  const { logout } = useAuth(); // Obtener logout del AuthProvider
+
+  // Ya no necesitamos handleLogout local, usamos el del AuthProvider
+  // const handleLogout = () => {
+  //   // Eliminar cookie de sesión
+  //   document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  //   // Redirigir a la página de login
+  //   window.location.href = '/login';
+  // };
 
   return (
     <header className="sticky top-0 z-30 w-full border-b bg-background">
@@ -35,7 +39,7 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
         <div className="flex items-center space-x-4">
           <Button 
             variant="outline" 
-            onClick={handleLogout}
+            onClick={logout} // Usar la función logout del AuthProvider
             className="bg-background hover:bg-accent hover:text-accent-foreground"
           >
             Cerrar Sesión

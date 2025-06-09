@@ -1,14 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-
 export default function HomePage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.replace('/dashboard');
-  }, [router]);
-
+  // Opcionalmente, puedes poner un loader aquí si hay un breve instante antes de la redirección del middleware.
+  // console.log('HomePage rendered, middleware should have redirected.');
   return null;
 }

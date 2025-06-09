@@ -18,22 +18,21 @@ const VALID_CREDENTIALS = {
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const router = useRouter();
 
-  // Verificar autenticación al cargar
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = () => {
-    // Verificar si hay una sesión activa
+  // Deriva isAuthenticated de la cookie de sesión en cada render
+  function getSessionAuth(): boolean {
+    if (typeof document === 'undefined') return false;
     const cookies = document.cookie.split(';').map(cookie => cookie.trim());
     const sessionCookie = cookies.find(cookie => cookie.startsWith('session='));
-    const isAuth = sessionCookie && sessionCookie.includes('true');
-    setIsAuthenticated(!!isAuth);
-    return isAuth;
-  };
+    return !!(sessionCookie && sessionCookie.includes('true'));
+  }
+  const isAuthenticated = getSessionAuth();
+  // Log visual y de consola para depuración
+  if (typeof window !== 'undefined') {
+    console.log('Cookie actual:', document.cookie);
+    console.log('isAuthenticated:', isAuthenticated);
+  }
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
@@ -42,17 +41,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (username === VALID_CREDENTIALS.username && password === VALID_CREDENTIALS.password) {
         // Establecer cookie de sesión
-        const cookieOptions = [
-          'session=true',
-          'path=/',
-          'max-age=86400', // 1 día
-          'SameSite=Lax', // Cambiado de Strict a Lax para permitir redirecciones
-          'Secure',
-          'HttpOnly'
-        ];
+        // En desarrollo local, no uses HttpOnly ni Secure
+        document.cookie = 'session=true; path=/; max-age=86400; SameSite=Lax';
         
-        document.cookie = cookieOptions.join('; ');
-        setIsAuthenticated(true);
+        const currentSearchParams = new URLSearchParams(window.location.search);
+        let redirectTo = currentSearchParams.get('callbackUrl');
+
+        if (redirectTo) {
+          try {
+            redirectTo = decodeURIComponent(redirectTo);
+          } catch (e) {
+            console.error('Error decoding callbackUrl:', e);
+            redirectTo = '/dashboard'; // Fallback on error
+          }
+        }
+
+        if (!redirectTo || !redirectTo.startsWith('/')) {
+          redirectTo = '/dashboard'; // Fallback if invalid or not present
+        }
+        
+        window.location.href = redirectTo;
         return true;
       }
       return false;
@@ -64,9 +72,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     // Eliminar la cookie de sesión
-    document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    setIsAuthenticated(false);
-    router.push('/login');
+    document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+    window.location.href = '/login'; // Hard redirect
   };
 
   return (

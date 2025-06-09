@@ -23,24 +23,24 @@ const mockRouter = {
 };
 
 // Mock Next.js Router
-jest.mock('next/router', () => ({
-  useRouter: () => mockRouter,
-}));
+// jest.mock('next/router', () => ({
+//   useRouter: () => mockRouter,
+// }));
 
 // Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
+// Object.defineProperty(window, 'matchMedia', {
+//   writable: true,
+//   value: jest.fn().mockImplementation(query => ({
+//     matches: false,
+//     media: query,
+//     onchange: null,
+//     addListener: jest.fn(),
+//     removeListener: jest.fn(),
+//     addEventListener: jest.fn(),
+//     removeEventListener: jest.fn(),
+//     dispatchEvent: jest.fn(),
+//   })),
+// });
 
 // Clear all mocks after each test
 afterEach(() => {

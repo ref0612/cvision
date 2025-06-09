@@ -1,23 +1,39 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  reactStrictMode: true,
   typescript: {
-    ignoreBuildErrors: true,
+    // Los errores de TypeScript deben corregirse, no ignorarse.
+    ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    // Los errores de ESLint deben corregirse, no ignorarse.
+    ignoreDuringBuilds: false,
   },
   images: {
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'placehold.co',
-        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
         pathname: '/**',
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/dashboard',
+        permanent: true,
+      },
+    ];
+  },
+
 };
 
 export default nextConfig;
