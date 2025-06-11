@@ -1,9 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
-interface RequestContext {
-  params: { id: string };
-}
+type RouteParams = {
+  params: {
+    id: string;
+  };
+};
 
 interface InventoryItem {
   id: string;
@@ -19,10 +21,9 @@ interface InventoryItem {
 }
 
 export async function PUT(
-  request: Request,
-  context: RequestContext
+  request: NextRequest,
+  { params }: RouteParams
 ) {
-  const { params } = context;
   try {
     const id = params.id;
     const data = await request.json();
@@ -51,10 +52,9 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: Request,
-  context: RequestContext
+  request: NextRequest,
+  { params }: RouteParams
 ) {
-  const { params } = context;
   try {
     const id = params.id;
     
