@@ -1,6 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
+// Type for the route parameters
+type RouteParams = {
+  params: { id: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
+};
+
+// Type for the inventory item
 interface InventoryItem {
   id: string;
   name: string;
@@ -14,10 +21,12 @@ interface InventoryItem {
   updatedAt: Date;
 }
 
+// Update an inventory item
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteParams
 ) {
+  const { params } = context;
   try {
     const id = params.id;
     const data = await request.json();
@@ -45,10 +54,12 @@ export async function PUT(
   }
 }
 
+// Delete an inventory item
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteParams
 ) {
+  const { params } = context;
   try {
     const id = params.id;
     
