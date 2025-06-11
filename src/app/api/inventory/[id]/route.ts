@@ -14,13 +14,9 @@ interface InventoryItem {
   updatedAt: Date;
 }
 
-interface RouteParams {
-  params: { id: string };
-}
-
 export async function PUT(
   request: Request,
-  { params }: RouteParams
+  { params }: { params: { id: string } }
 ) {
   try {
     const id = params.id;
@@ -51,7 +47,7 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: RouteParams
+  { params }: { params: { id: string } }
 ) {
   try {
     const id = params.id;
