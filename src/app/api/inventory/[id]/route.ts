@@ -14,12 +14,16 @@ interface InventoryItem {
   updatedAt: Date;
 }
 
+interface RouteParams {
+  params: { id: string };
+}
+
 export async function PUT(
   request: Request,
-  context: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
-    const id = context.params.id;
+    const id = params.id;
     const data = await request.json();
     
     const updatedItem = await prisma.inventoryItem.update({
@@ -47,10 +51,10 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  context: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
-    const id = context.params.id;
+    const id = params.id;
     
     await prisma.inventoryItem.delete({
       where: { id },
