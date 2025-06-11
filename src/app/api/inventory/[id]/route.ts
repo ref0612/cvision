@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
-type RouteParams = {
-  params: {
-    id: string;
-  };
-};
-
 interface InventoryItem {
   id: string;
   name: string;
@@ -22,7 +16,7 @@ interface InventoryItem {
 
 export async function PUT(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: { id: string } }
 ) {
   try {
     const id = params.id;
@@ -53,7 +47,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: { id: string } }
 ) {
   try {
     const id = params.id;
