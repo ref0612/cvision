@@ -16,10 +16,10 @@ interface InventoryItem {
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
     const data = await request.json();
 
     const updatedItem = await prisma.inventoryItem.update({
@@ -47,10 +47,10 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
 
     await prisma.inventoryItem.delete({
       where: { id },
