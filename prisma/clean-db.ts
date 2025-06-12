@@ -5,10 +5,9 @@ const prisma = new PrismaClient();
 async function cleanDatabase() {
   try {
     // El orden es importante por las restricciones de clave foránea
-    await prisma.detalleVenta.deleteMany({});
-    await prisma.venta.deleteMany({});
-    await prisma.producto.deleteMany({});
-    await prisma.cliente.deleteMany({});
+    await prisma.productComponent.deleteMany({});
+    await prisma.sellableProduct.deleteMany({});
+    await prisma.inventoryItem.deleteMany({});
     
     console.log('✅ Base de datos limpiada exitosamente');
   } catch (error) {
