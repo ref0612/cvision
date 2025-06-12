@@ -159,10 +159,7 @@ export default function InventoryPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Inventario</h1>
-        <Button onClick={handleNewItem}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Agregar Artículo
-        </Button>
+        
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -194,6 +191,10 @@ export default function InventoryPage() {
             <p className="text-xs text-muted-foreground">Basado en precio de compra.</p>
           </CardContent>
         </Card>
+        <Button onClick={handleNewItem}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Agregar Artículo
+        </Button>
       </div>
 
       <Card>
