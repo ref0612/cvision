@@ -95,13 +95,13 @@ export async function updateSellableProduct(id: string, productData: Partial<Sel
     if (productData.components) {
       // Eliminar componentes existentes
       await prisma.productComponent.deleteMany({
-        where: { productId: id },
+        where: { sellableProductId: id },
       });
 
       // Crear nuevos componentes
       await prisma.productComponent.createMany({
         data: productData.components.map(comp => ({
-          productId: id,
+          sellableProductId: id,
           itemName: comp.itemName,
           quantity: comp.quantity,
           purchasePriceAtTimeOfAssembly: comp.purchasePriceAtTimeOfAssembly,
@@ -129,7 +129,7 @@ export async function deleteSellableProduct(id: string): Promise<void> {
   try {
     // Primero eliminamos los componentes asociados
     await prisma.productComponent.deleteMany({
-      where: { productId: id },
+      where: { sellableProductId: id },
     });
     
     // Luego eliminamos el producto
