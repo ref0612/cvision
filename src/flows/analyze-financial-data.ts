@@ -1,4 +1,3 @@
-/ src/ai/flows/analyze-financial-data.ts
 'use server';
 
 /**

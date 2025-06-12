@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import type { Session } from 'next-auth';
 
 interface RequireAuthProps {
   children: React.ReactNode;
@@ -23,7 +24,7 @@ export function RequireAuth({ children, requiredRole }: RequireAuthProps) {
     }
 
     // Redirigir a la página de no autorizado si el usuario no tiene el rol requerido
-    if (requiredRole && session.user.role !== requiredRole) {
+    if (requiredRole && session?.user?.role && session.user.role !== requiredRole) {
       router.push('/unauthorized');
     }
   }, [session, status, router, requiredRole]);

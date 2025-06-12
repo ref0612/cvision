@@ -27,18 +27,20 @@
       "@/*": [
         "./src/*"
       ]
-    }
+    },
+    "typeRoots": [
+      "node_modules/@types",
+      "src/types"
+    ]
   },
   "include": [
-    "**/*.test.ts",
-    "**/*.test.tsx",
+    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "jest.d.ts",
-    "next-env.d.ts",
+    ".next/types/**/*.ts",
     "src/types/**/*.d.ts",
-    "src/types/global-types.d.ts",
-    ".next/types/**/*.ts"
+    "jest.d.ts",
+    "src/types/global-types.d.ts"
   ],
   "exclude": [
     "node_modules"
