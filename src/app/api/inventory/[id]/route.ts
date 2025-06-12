@@ -10,7 +10,7 @@ interface InventoryItem {
   sku: string | null;
   supplier: string | null;
   size: string | null;
-  lastRestocked: Date | null;
+  lastRestocked?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,8 +36,7 @@ export async function PUT(
     return NextResponse.json({
       ...updatedItem,
       id: String(updatedItem.id),
-      lastRestocked: updatedItem.lastRestocked,
-    } as InventoryItem);
+    });
   } catch (error) {
     console.error('Error updating inventory item:', error);
     return NextResponse.json(
