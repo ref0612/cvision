@@ -41,25 +41,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (username === VALID_CREDENTIALS.username && password === VALID_CREDENTIALS.password) {
         // Establecer cookie de sesión
-        // En desarrollo local, no uses HttpOnly ni Secure
-        document.cookie = 'session=true; path=/; max-age=86400; SameSite=Lax';
+        const cookieOptions = [
+          'session=true',
+          'path=/',
+          'max-age=86400', // 1 día
+          'SameSite=Lax',
+          process.env.NODE_ENV === 'production' ? 'Secure' : '',
+          'HttpOnly'
+        ].filter(Boolean).join('; ');
         
+        document.cookie = cookieOptions;
+        
+        // Obtener la URL de redirección de los parámetros de búsqueda
         const currentSearchParams = new URLSearchParams(window.location.search);
-        let redirectTo = currentSearchParams.get('callbackUrl');
+        let redirectTo = currentSearchParams.get('callbackUrl') || '/dashboard';
 
-        if (redirectTo) {
-          try {
-            redirectTo = decodeURIComponent(redirectTo);
-          } catch (e) {
-            console.error('Error decoding callbackUrl:', e);
-            redirectTo = '/dashboard'; // Fallback on error
+        try {
+          redirectTo = decodeURIComponent(redirectTo);
+          if (!redirectTo.startsWith('/')) {
+            redirectTo = '/dashboard';
           }
-        }
-
-        if (!redirectTo || !redirectTo.startsWith('/')) {
-          redirectTo = '/dashboard'; // Fallback if invalid or not present
+        } catch (e) {
+          console.error('Error decoding callbackUrl:', e);
+          redirectTo = '/dashboard';
         }
         
+        // Forzar una recarga completa para asegurar que el estado de autenticación se actualice
         window.location.href = redirectTo;
         return true;
       }
