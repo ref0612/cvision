@@ -21,7 +21,7 @@ export function Sidebar({ isOpen, onClose, className, ...props }: {
       className={cn(
         'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r transition-transform duration-300 ease-in-out transform h-screen overflow-y-auto',
         isOpen ? 'translate-x-0' : '-translate-x-full',
-        'md:translate-x-0 md:fixed md:w-32',
+        'md:translate-x-0 md:fixed md:w-64',
         className
       )}
       {...props}
