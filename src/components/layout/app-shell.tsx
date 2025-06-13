@@ -103,7 +103,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       />
       
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-h-screen md:pl-64 transition-all duration-200">
+      <div className="flex-1 flex flex-col min-h-screen transition-all duration-200">
         <SiteHeader onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {children}
