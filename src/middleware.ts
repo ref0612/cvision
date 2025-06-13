@@ -58,6 +58,7 @@ export async function middleware(request: NextRequest) {
 }
 
 // Asegurarse de que el middleware se ejecute en las rutas correctas
+// Configuración del matcher para incluir todas las rutas excepto las públicas
 export const config = {
   matcher: [
     /*
@@ -66,7 +67,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - public folder
+     * - _vercel (Vercel internals)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|_vercel).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|_vercel|assets).*)',
   ],
 };

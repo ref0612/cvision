@@ -46,11 +46,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           'path=/',
           'max-age=86400', // 1 día
           'SameSite=Lax',
-          process.env.NODE_ENV === 'production' ? 'Secure' : '',
-          'HttpOnly'
+          process.env.NODE_ENV === 'production' ? 'Secure' : ''
         ].filter(Boolean).join('; ');
         
+        // Usar document.cookie directamente para asegurar que se establezca
         document.cookie = cookieOptions;
+        
+        // Verificar que la cookie se estableció correctamente
+        console.log('Cookie establecida:', document.cookie);
         
         // Obtener la URL de redirección de los parámetros de búsqueda
         const currentSearchParams = new URLSearchParams(window.location.search);
