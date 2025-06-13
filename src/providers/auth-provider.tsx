@@ -52,13 +52,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Usar document.cookie directamente para asegurar que se establezca
         document.cookie = cookieOptions;
         
-        // Verificar que la cookie se estableció correctamente
         console.log('Cookie establecida:', document.cookie);
         
-        // Obtener la URL de redirección de los parámetros de búsqueda
+        // Forzar una recarga completa para asegurar que el estado de autenticación se actualice
+        // Usar una URL absoluta para asegurar que funcione correctamente
         const currentSearchParams = new URLSearchParams(window.location.search);
         let redirectTo = currentSearchParams.get('callbackUrl') || '/dashboard';
-
+        
         try {
           redirectTo = decodeURIComponent(redirectTo);
           if (!redirectTo.startsWith('/')) {
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           redirectTo = '/dashboard';
         }
         
-        // Forzar una recarga completa para asegurar que el estado de autenticación se actualice
+        // Recargar la página para asegurar que el middleware se ejecute
         window.location.href = redirectTo;
         return true;
       }

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const publicPaths = ['/login', '/_next', '/favicon.ico', '/api', '/_vercel', '/assets'];
+const publicPaths = ['/login', '/_next', '/favicon.ico', '/api', '/_vercel', '/assets', '/unauthorized'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -19,7 +19,6 @@ export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get('session');
   const isAuthenticated = sessionCookie?.value === 'true';
 
-  // Para depuración
   console.log('Middleware - Path:', pathname);
   console.log('Middleware - Session cookie:', sessionCookie?.value);
   console.log('Middleware - Is authenticated:', isAuthenticated);
@@ -41,35 +40,23 @@ export async function middleware(request: NextRequest) {
   // Usuario autenticado, permitir acceso
   const response = NextResponse.next();
   
-  // Asegurarse de que la cookie de sesión tenga las opciones correctas
-  if (sessionCookie) {
-    response.cookies.set({
-      name: 'session',
-      value: 'true',
-      path: '/',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24, // 1 día
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-    });
-  }
+  // Refrescar la cookie para extender la sesión
+  response.cookies.set({
+    name: 'session',
+    value: 'true',
+    path: '/',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24, // 1 día
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+  });
 
   return response;
 }
 
-// Asegurarse de que el middleware se ejecute en las rutas correctas
-// Configuración del matcher para incluir todas las rutas excepto las públicas
 export const config = {
+  // Aplicar a todas las rutas excepto las estáticas y las de API
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     * - _vercel (Vercel internals)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico|_vercel|assets).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api|_vercel|assets).*)',
   ],
 };
