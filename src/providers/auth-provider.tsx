@@ -26,12 +26,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Función para verificar autenticación
   const checkAuth = useCallback((): boolean => {
     if (typeof document === 'undefined') return false;
-    const cookies = document.cookie.split(';').map(cookie => cookie.trim());
-    const sessionCookie = cookies.find(cookie => cookie.startsWith('session='));
-    const authStatus = !!(sessionCookie && sessionCookie.includes('true'));
-    setIsAuthenticated(authStatus);
+    
+    // Función para obtener el valor de una cookie por nombre
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift();
+      return null;
+    };
+    
+    const sessionValue = getCookie('session');
+    const authStatus = sessionValue === 'true';
+    
+    // Solo actualizar el estado si es diferente para evitar re-renders innecesarios
+    if (isAuthenticated !== authStatus) {
+      setIsAuthenticated(authStatus);
+    }
+    
     return authStatus;
-  }, []);
+  }, [isAuthenticated]);
 
   // Efecto para verificar autenticación al montar y en cambios de ruta
   useEffect(() => {
@@ -70,8 +83,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           process.env.NODE_ENV === 'production' ? 'Secure' : ''
         ].filter(Boolean).join('; ');
         
-        // Establecer la cookie
-        document.cookie = cookieOptions;
+        // Establecer la cookie con opciones completas
+        document.cookie = `session=true; path=/; max-age=86400; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`;
         
         // Actualizar el estado después de establecer la cookie
         setIsAuthenticated(true);
@@ -108,12 +121,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Actualizar el estado primero
     setIsAuthenticated(false);
     
-    // Luego eliminar la cookie de sesión
-    document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    // Luego eliminar la cookie de sesión con las mismas opciones que se usaron para crearla
+    document.cookie = `session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`;
     
-    // Redirigir al login
-    router.push('/login');
-    router.refresh(); // Forzar recarga para asegurar que se apliquen los cambios
+    // Forzar una recarga completa para limpiar cualquier estado en memoria
+    window.location.href = '/login';
   };
 
   // No renderizar los hijos hasta que la autenticación se haya verificado

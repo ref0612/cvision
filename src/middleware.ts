@@ -31,16 +31,24 @@ export async function middleware(request: NextRequest) {
   // Usuario autenticado, permitir acceso
   const response = NextResponse.next();
   
-  // Refrescar la cookie para extender la sesión
-  response.cookies.set({
-    name: 'session',
-    value: 'true',
-    path: '/',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24, // 1 día
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-  });
+  // Solo refrescar la cookie si la petición es para una ruta de la aplicación
+  // y no es una solicitud de recurso estático o de API
+  const isAppRoute = !pathname.startsWith('/_next') && 
+                   !pathname.startsWith('/api') && 
+                   !pathname.match(/\.(ico|png|jpg|jpeg|css|js|svg)$/);
+  
+  if (isAppRoute) {
+    // Refrescar la cookie para extender la sesión
+    response.cookies.set({
+      name: 'session',
+      value: 'true',
+      path: '/',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24, // 1 día
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+    });
+  }
 
   return response;
 }
