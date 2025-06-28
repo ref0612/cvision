@@ -6,8 +6,10 @@ export async function POST(request: Request) {
     
     console.log('Intento de inicio de sesión para usuario:', username);
     
+    console.log('Validando credenciales para usuario:', username);
     // Validar credenciales (esto es un ejemplo, deberías validar contra tu base de datos)
-    const isValid = username === 'admin' && password === 'admin';
+    const isValid = username === 'admin' && password === 'admin123';
+    console.log('Credenciales válidas?:', isValid);
     
     if (!isValid) {
       console.log('Credenciales inválidas para usuario:', username);

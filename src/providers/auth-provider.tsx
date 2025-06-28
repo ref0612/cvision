@@ -116,87 +116,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [isInitialized]);
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    console.log('\n--- Iniciando proceso de login ---');
+    console.log('\n--- [AuthProvider] Iniciando proceso de login ---');
     console.log('Usuario:', username);
     
     try {
       setIsLoading(true);
       
-      // Configurar la URL de la API
-      const apiUrl = '/api/login';
-      
-      console.log('Realizando petición POST a:', apiUrl);
-      
-      // Realizar la petición de login
-      const response = await fetch(apiUrl, {
+      // 1. Realizar la petición de login
+      console.log('Enviando solicitud a /api/login');
+      const response = await fetch('/api/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        credentials: 'include', // Importante para incluir cookies
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ username, password }),
       });
-      
-      console.log('Respuesta recibida:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        redirected: response.redirected,
-        url: response.url,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-      
-      // Procesar la respuesta
+
+      // 2. Procesar la respuesta
       const data = await response.json().catch(() => ({
         success: false,
         error: 'Error al procesar la respuesta del servidor'
       }));
-      
-      console.log('Datos de la respuesta:', data);
-      
+
+      console.log('Respuesta del servidor:', { status: response.status, data });
+
+      // 3. Si el login fue exitoso
       if (response.ok && data.success) {
-        console.log('Login exitoso, actualizando estado de autenticación...');
+        console.log('Login exitoso, redirigiendo a /dashboard');
         
-        // Actualizar el estado de autenticación
+        // Actualizar el estado local
         setIsAuthenticated(true);
         
-        // Obtener la URL de redirección de los parámetros de búsqueda o usar la ruta por defecto
-        const searchParams = new URLSearchParams(window.location.search);
-        let callbackUrl = searchParams.get('callbackUrl') || '/';
-        
-        // Asegurarse de que la URL de callback sea relativa y segura
-        try {
-          const url = new URL(callbackUrl, window.location.origin);
-          // Solo permitir rutas dentro del mismo origen
-          if (url.origin === window.location.origin) {
-            callbackUrl = url.pathname + url.search;
-          } else {
-            callbackUrl = '/';
-          }
-        } catch (e) {
-          console.error('Error al parsear la URL de callback:', e);
-          callbackUrl = '/';
-        }
-        
-        console.log('Redirigiendo a:', callbackUrl);
-        
-        // Usar replace para evitar problemas de historial de navegación
-        window.location.href = callbackUrl;
-        
+        // Redirigir al dashboard
+        window.location.href = '/dashboard';
         return true;
-      } else {
-        const errorMessage = data.error || 'Error desconocido al iniciar sesión';
-        console.error('Error en login:', errorMessage);
-        throw new Error(errorMessage);
       }
+
+      // 4. Si hay un error
+      const errorMessage = data.error || 'Error desconocido al iniciar sesión';
+      console.error('Error en login:', errorMessage);
+      throw new Error(errorMessage);
+      
     } catch (error) {
       console.error('Error en proceso de login:', error);
-      // Forzar recarga de la página solo si hay un error de red
-      if (error instanceof Error && error.message.includes('NetworkError')) {
-        console.log('Error de red, recargando página...');
-        window.location.reload();
-      }
       throw error;
     } finally {
       setIsLoading(false);
