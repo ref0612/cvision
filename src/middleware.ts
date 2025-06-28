@@ -19,40 +19,26 @@ export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get('session');
   const isAuthenticated = sessionCookie?.value === 'true';
 
-  // Si el usuario NO está autenticado, redirigir a /login
+  // Si el usuario NO está autenticado, redirigir a /login con la URL de retorno
   if (!isAuthenticated) {
     const loginUrl = new URL('/login', request.url);
-    // Solo agregar callbackUrl si no es la raíz y no es la página de login
-    if (pathname !== '/' && !pathname.startsWith('/login')) {
-      loginUrl.searchParams.set('callbackUrl', pathname);
-    } else {
-      // Si es la raíz, redirigir al dashboard después del login
-      loginUrl.searchParams.set('callbackUrl', '/dashboard');
-    }
+    loginUrl.searchParams.set('callbackUrl', '/dashboard');
     return NextResponse.redirect(loginUrl);
   }
 
   // Usuario autenticado, permitir acceso
   const response = NextResponse.next();
   
-  // Solo refrescar la cookie si la petición es para una ruta de la aplicación
-  // y no es una solicitud de recurso estático o de API
-  const isAppRoute = !pathname.startsWith('/_next') && 
-                   !pathname.startsWith('/api') && 
-                   !pathname.match(/\.(ico|png|jpg|jpeg|css|js|svg)$/);
-  
-  if (isAppRoute) {
-    // Refrescar la cookie para extender la sesión
-    response.cookies.set({
-      name: 'session',
-      value: 'true',
-      path: '/',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24, // 1 día
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-    });
-  }
+  // Refrescar la cookie para extender la sesión
+  response.cookies.set({
+    name: 'session',
+    value: 'true',
+    path: '/',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24, // 1 día
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+  });
 
   return response;
 }

@@ -1,7 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 type AuthContextType = {
   isAuthenticated: boolean;
@@ -19,62 +19,33 @@ const VALID_CREDENTIALS = {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
   // Función para verificar autenticación
-  const checkAuth = useCallback((): boolean => {
+  const checkAuth = (): boolean => {
     if (typeof document === 'undefined') return false;
     
-    // Función para obtener el valor de una cookie por nombre
-    const getCookie = (name: string) => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop()?.split(';').shift();
-      return null;
-    };
+    // Verificar si la cookie de sesión existe
+    const cookies = document.cookie.split(';').map(c => c.trim());
+    const hasSession = cookies.some(cookie => cookie.startsWith('session=') && cookie.includes('true'));
     
-    const sessionValue = getCookie('session');
-    const authStatus = sessionValue === 'true';
-    
-    // Solo actualizar el estado si es diferente para evitar re-renders innecesarios
-    if (isAuthenticated !== authStatus) {
-      setIsAuthenticated(authStatus);
-    }
-    
-    return authStatus;
-  }, [isAuthenticated]);
+    return hasSession;
+  };
 
-  // Efecto para verificar autenticación al montar y en cambios de ruta
+  // Efecto para verificar autenticación al montar
   useEffect(() => {
     const authStatus = checkAuth();
+    setIsAuthenticated(authStatus);
     
     // Si no está autenticado y no está en la página de login, redirigir
-    if (!authStatus && !pathname.startsWith('/login')) {
-      const loginUrl = new URL('/login', window.location.origin);
-      loginUrl.searchParams.set('callbackUrl', pathname);
-      window.location.href = loginUrl.toString();
-      return;
-    }
-    
-    // Si está autenticado y está en la página de login, redirigir al dashboard
-    if (authStatus && pathname.startsWith('/login')) {
-      const searchParams = new URLSearchParams(window.location.search);
-      let callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
-      
-      // Asegurarse de que la URL de retorno sea válida y no cause bucles
-      if (callbackUrl === '/' || !callbackUrl.startsWith('/')) {
-        callbackUrl = '/dashboard';
-      }
-      
-      // Usar replace para evitar problemas de historial de navegación
-      window.location.replace(callbackUrl);
+    if (!authStatus && !window.location.pathname.startsWith('/login')) {
+      window.location.href = '/login';
       return;
     }
     
     setIsInitialized(true);
-  }, [pathname, checkAuth]);
+  }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
@@ -83,39 +54,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (username === VALID_CREDENTIALS.username && password === VALID_CREDENTIALS.password) {
         // Establecer cookie de sesión
-        const cookieOptions = [
-          'session=true',
-          'path=/',
-          'max-age=86400', // 1 día
-          'SameSite=Lax',
-          process.env.NODE_ENV === 'production' ? 'Secure' : ''
-        ].filter(Boolean).join('; ');
+        const secureFlag = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+        document.cookie = `session=true; path=/; max-age=86400; SameSite=Lax${secureFlag}`;
         
-        // Establecer la cookie con opciones completas
-        document.cookie = `session=true; path=/; max-age=86400; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`;
-        
-        // Actualizar el estado después de establecer la cookie
+        // Actualizar el estado
         setIsAuthenticated(true);
         
-        console.log('Cookie establecida:', document.cookie);
-        
-        // Forzar una recarga completa para asegurar que el estado de autenticación se actualice
-        // Usar una URL absoluta para asegurar que funcione correctamente
-        const currentSearchParams = new URLSearchParams(window.location.search);
-        let redirectTo = currentSearchParams.get('callbackUrl') || '/dashboard';
+        // Redirigir al dashboard
+        const urlParams = new URLSearchParams(window.location.search);
+        let callbackUrl = urlParams.get('callbackUrl') || '/dashboard';
         
         try {
-          redirectTo = decodeURIComponent(redirectTo);
-          if (!redirectTo.startsWith('/')) {
-            redirectTo = '/dashboard';
+          // Asegurarse de que la URL de retorno sea válida
+          callbackUrl = decodeURIComponent(callbackUrl);
+          if (!callbackUrl.startsWith('/')) {
+            callbackUrl = '/dashboard';
           }
         } catch (e) {
           console.error('Error decoding callbackUrl:', e);
-          redirectTo = '/dashboard';
+          callbackUrl = '/dashboard';
         }
         
-        // Recargar la página para asegurar que el middleware se ejecute
-        window.location.href = redirectTo;
+        window.location.href = callbackUrl;
         return true;
       }
       return false;
@@ -126,13 +86,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    // Actualizar el estado primero
+    // Eliminar la cookie de sesión
+    const secureFlag = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+    document.cookie = `session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag}`;
+    
+    // Actualizar el estado
     setIsAuthenticated(false);
     
-    // Luego eliminar la cookie de sesión con las mismas opciones que se usaron para crearla
-    document.cookie = `session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`;
-    
-    // Forzar una recarga completa para limpiar cualquier estado en memoria
+    // Redirigir al login
     window.location.href = '/login';
   };
 

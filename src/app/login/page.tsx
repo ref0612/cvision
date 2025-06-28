@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,12 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const { login, isAuthenticated } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  
-  // No necesitamos este efecto ya que el AuthProvider manejará la redirección
-  // para evitar bucles de redirección
+  const { login } = useAuth();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,16 +29,8 @@ export default function LoginPage() {
       const success = await login(username, password);
       if (!success) {
         setError('Usuario o contraseña incorrectos');
-      } else {
-        // Limpiar los campos después de un inicio de sesión exitoso
-        setUsername('');
-        setPassword('');
-        
-        // Forzar una recarga completa para asegurar que se apliquen todos los cambios de estado
-        const searchParams = new URLSearchParams(window.location.search);
-        const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
-        window.location.href = callbackUrl;
       }
+      // La redirección se maneja dentro de la función login
     } catch (err) {
       setError('Ocurrió un error al iniciar sesión');
       console.error('Login error:', err);
