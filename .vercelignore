@@ -1,0 +1,65 @@
+# Dependencies
+node_modules/
+.next/cache/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Prisma
+/prisma/migrations/
+/prisma/*.db
+/prisma/*.db-journal
+
+# Testing
+/coverage
+/__tests__/
+*.test.*
+*.spec.*
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local development
+.DS_Store
+*.pem
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Build output
+.next/
+out/
+build/
+dist/
+
+# Misc
+.cache/
+.temp/
+.tmp/
+.vercel/
+*.local
+
+# Optional npm and pnpm
+package-lock.json
+pnpm-lock.yaml
+
+# Optional next.js specific
+.next/
+
+# Optional production exclusion
+**/__tests__/**
+**/test/**
+**/tests/**
+**/*.test.*
+**/*.spec.*

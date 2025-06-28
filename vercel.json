@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "npm run vercel-build",
+  "installCommand": "npm install",
   "builds": [
     {
       "src": "package.json",
@@ -15,5 +17,19 @@
       "src": "/(.*)",
       "dest": "/$1"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  },
+  "functions": {
+    "src/api/**/*.ts": {
+      "maxDuration": 10
+    }
+  },
+  "regions": ["gru1"]
 }
