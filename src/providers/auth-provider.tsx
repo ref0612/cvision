@@ -26,65 +26,84 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Función para verificar autenticación
   const checkAuth = (): boolean => {
+    // En el servidor, asumimos que el middleware ya verificó la autenticación
     if (typeof document === 'undefined') return false;
     
-    // Verificar si la cookie de sesión existe
-    console.log('AuthProvider - Todas las cookies:', document.cookie);
-    const cookies = document.cookie.split(';').map(c => c.trim());
+    // Verificar si hay una cookie de sesión
+    const cookies = document.cookie.split(';').map(cookie => cookie.trim());
     const sessionCookie = cookies.find(cookie => cookie.startsWith('session='));
-    const hasSession = !!sessionCookie && sessionCookie.includes('true');
     
-    console.log('AuthProvider - Cookie de sesión encontrada:', sessionCookie);
-    console.log('AuthProvider - Sesión válida:', hasSession);
+    // La cookie debe existir y tener el valor 'true'
+    const hasValidSession = sessionCookie !== undefined && sessionCookie.includes('true');
     
-    return hasSession;
+    console.log('--- Verificación de sesión ---');
+    console.log('Cookie de sesión encontrada:', sessionCookie || 'No encontrada');
+    console.log('Sesión válida:', hasValidSession);
+    
+    return hasValidSession;
   };
 
   // Efecto para verificar autenticación al cargar
   useEffect(() => {
     console.log('\n--- AuthProvider ---');
-    console.log('Verificando autenticación en ruta:', window.location.pathname);
+    console.log('Ruta actual:', window.location.pathname);
     
-    // Verificar autenticación
-    const isAuth = checkAuth();
-    console.log('Estado de autenticación:', isAuth);
-    
-    // Actualizar estado
-    setIsAuthenticated(isAuth);
-    
-    // Solo manejar redirecciones si ya está inicializado
-    if (isInitialized) {
-      // Si no está autenticado y no está en login, redirigir a login
-      if (!isAuth && window.location.pathname !== '/login') {
-        console.log('Redirigiendo a /login');
-        const loginUrl = new URL('/login', window.location.origin);
-        loginUrl.searchParams.set('callbackUrl', window.location.pathname);
-        window.location.href = loginUrl.toString();
-        return;
+    const verifyAuth = async () => {
+      try {
+        // Verificar autenticación
+        const isAuth = checkAuth();
+        console.log('Estado de autenticación:', isAuth);
+        
+        // Actualizar estado
+        setIsAuthenticated(isAuth);
+        
+        // Solo manejar redirecciones si ya está inicializado
+        if (isInitialized) {
+          // Si no está autenticado y no está en login, redirigir a login
+          if (!isAuth && window.location.pathname !== '/login') {
+            console.log('No autenticado, redirigiendo a /login');
+            const loginUrl = new URL('/login', window.location.origin);
+            loginUrl.searchParams.set('callbackUrl', window.location.pathname);
+            window.location.href = loginUrl.toString();
+            return;
+          }
+          
+          // Si está autenticado y está en login, redirigir al dashboard
+          if (isAuth && window.location.pathname === '/login') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const callbackUrl = urlParams.get('callbackUrl') || '/dashboard';
+            console.log('Autenticado, redirigiendo a:', callbackUrl);
+            // Usar replace para evitar que el usuario pueda volver atrás a /login
+            window.location.replace(callbackUrl);
+            return;
+          }
+        }
+        
+        // Marcar como inicializado después de la primera verificación
+        if (!isInitialized) {
+          console.log('AuthProvider inicializado');
+          setIsInitialized(true);
+        }
+      } catch (error) {
+        console.error('Error al verificar autenticación:', error);
+        // En caso de error, redirigir a login
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
-      
-      // Si está autenticado y está en login, redirigir al dashboard
-      if (isAuth && window.location.pathname === '/login') {
-        const urlParams = new URLSearchParams(window.location.search);
-        const callbackUrl = urlParams.get('callbackUrl') || '/dashboard';
-        console.log('Redirigiendo a:', callbackUrl);
-        window.location.href = callbackUrl;
-        return;
-      }
-    }
+    };
     
-    // Marcar como inicializado después de la primera verificación
-    if (!isInitialized) {
-      console.log('AuthProvider inicializado');
-      setIsInitialized(true);
-    }
+    verifyAuth();
   }, [isInitialized]);
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    console.log('AuthProvider - Iniciando login con usuario:', username);
+    console.log('\n--- Iniciando proceso de login ---');
+    console.log('Usuario:', username);
     
     try {
       setIsLoading(true);
+      
+      // Realizar la petición de login
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: {
@@ -97,9 +116,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
       
       if (response.ok && data.success) {
-        console.log('AuthProvider - Inicio de sesión exitoso');
+        console.log('Login exitoso');
         
-        // Actualizar el estado
+        // Actualizar el estado de autenticación
         setIsAuthenticated(true);
         
         // Obtener la URL de redirección
@@ -113,22 +132,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             callbackUrl = '/dashboard';
           }
         } catch (e) {
-          console.error('Error decoding callbackUrl:', e);
+          console.error('Error al decodificar callbackUrl:', e);
           callbackUrl = '/dashboard';
         }
         
-        console.log('AuthProvider - Redirigiendo a:', callbackUrl);
+        console.log('Redirigiendo a:', callbackUrl);
         
         // Forzar una recarga completa para asegurar que el estado se actualice
-        window.location.href = callbackUrl;
+        // Usamos replace para evitar que el usuario pueda volver atrás a la pantalla de login
+        window.location.replace(callbackUrl);
         return true;
       } else {
-        const errorMessage = data.error || 'Error desconocido';
-        console.log('AuthProvider - Error en el inicio de sesión:', errorMessage);
+        const errorMessage = data.error || 'Error desconocido al iniciar sesión';
+        console.error('Error en login:', errorMessage);
         throw new Error(errorMessage);
       }
     } catch (error) {
-      console.error('Error en login:', error);
+      console.error('Error en proceso de login:', error);
       throw error;
     } finally {
       setIsLoading(false);

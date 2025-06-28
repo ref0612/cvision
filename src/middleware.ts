@@ -36,7 +36,13 @@ export async function middleware(request: NextRequest) {
   console.log('Cookie de sesión:', sessionCookie?.value || 'No encontrada');
   console.log('Autenticado:', isAuthenticated);
 
-  // Si es la ruta de login y ya está autenticado, redirigir al dashboard
+  // Si es la ruta de api/login, permitir el acceso
+  if (pathname === '/api/login') {
+    console.log('Acceso a API de login permitido');
+    return NextResponse.next();
+  }
+
+  // Si es la ruta de login
   if (pathname === '/login') {
     if (isAuthenticated) {
       console.log('Usuario ya autenticado, redirigiendo a /dashboard');
@@ -64,17 +70,9 @@ export async function middleware(request: NextRequest) {
   // Crear respuesta
   const response = NextResponse.next();
   
-  // Refrescar la cookie para extender la sesión
-  response.cookies.set({
-    name: 'session',
-    value: 'true',
-    path: '/',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24, // 1 día
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-  });
-
+  // No es necesario refrescar la cookie aquí ya que se maneja en la API de login
+  // Esto evita conflictos con las cabeceras de respuesta
+  
   return response;
 }
 

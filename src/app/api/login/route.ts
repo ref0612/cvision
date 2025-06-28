@@ -14,22 +14,16 @@ export async function POST(request: Request) {
       );
     }
     
-    // Crear respuesta exitosa
+    // Crear respuesta exitosa con la cookie
     const response = NextResponse.json(
       { success: true },
-      { status: 200 }
+      { 
+        status: 200,
+        headers: {
+          'Set-Cookie': `session=true; Path=/; Max-Age=86400; ${process.env.NODE_ENV === 'production' ? 'Secure; ' : ''}SameSite=Lax; HttpOnly`
+        }
+      }
     );
-    
-    // Establecer cookie de sesión
-    response.cookies.set({
-      name: 'session',
-      value: 'true',
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24, // 1 día
-    });
     
     return response;
     
