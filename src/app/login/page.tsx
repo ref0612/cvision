@@ -30,10 +30,9 @@ export default function LoginPage() {
       if (!success) {
         setError('Usuario o contraseña incorrectos');
       }
-      // La redirección se maneja dentro de la función login
-    } catch (err) {
-      setError('Ocurrió un error al iniciar sesión');
+    } catch (err: any) {
       console.error('Login error:', err);
+      setError(err.message || 'Ocurrió un error al iniciar sesión');
     } finally {
       setIsLoading(false);
     }

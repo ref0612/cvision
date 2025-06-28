@@ -39,17 +39,11 @@ export async function middleware(request: NextRequest) {
   // Usuario autenticado, permitir acceso
   const response = NextResponse.next();
   
-  // Obtener el dominio actual
-  const domain = request.nextUrl.hostname === 'localhost' 
-    ? 'localhost' 
-    : '.vercel.app';
-  
   // Refrescar la cookie para extender la sesión
   response.cookies.set({
     name: 'session',
     value: 'true',
     path: '/',
-    domain,
     sameSite: 'lax',
     maxAge: 60 * 60 * 24, // 1 día
     httpOnly: true,

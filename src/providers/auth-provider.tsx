@@ -56,48 +56,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('AuthProvider - Iniciando login con usuario:', username);
     
     try {
-      // Simulamos una petición de red
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
       
-      if (username === VALID_CREDENTIALS.username && password === VALID_CREDENTIALS.password) {
-        console.log('AuthProvider - Credenciales válidas');
-        
-        // Obtener el dominio actual
-        const domain = window.location.hostname === 'localhost' ? 'localhost' : '.vercel.app';
-        
-        // Establecer cookie de sesión con dominio explícito
-        const secureFlag = process.env.NODE_ENV === 'production' ? '; Secure' : '';
-        const cookieString = `session=true; path=/; max-age=86400; domain=${domain}; SameSite=Lax${secureFlag}`;
-        document.cookie = cookieString;
-        
-        console.log('AuthProvider - Cookie establecida:', cookieString);
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        console.log('AuthProvider - Inicio de sesión exitoso');
         
         // Actualizar el estado
         setIsAuthenticated(true);
         
-        // Redirigir al dashboard con un pequeño retraso para asegurar que la cookie se establezca
-        setTimeout(() => {
-          const urlParams = new URLSearchParams(window.location.search);
-          let callbackUrl = urlParams.get('callbackUrl') || '/dashboard';
-          
-          try {
-            // Asegurarse de que la URL de retorno sea válida
-            callbackUrl = decodeURIComponent(callbackUrl);
-            if (!callbackUrl.startsWith('/') || callbackUrl === '/') {
-              callbackUrl = '/dashboard';
-            }
-          } catch (e) {
-            console.error('Error decoding callbackUrl:', e);
+        // Obtener la URL de redirección
+        const urlParams = new URLSearchParams(window.location.search);
+        let callbackUrl = urlParams.get('callbackUrl') || '/dashboard';
+        
+        try {
+          // Asegurarse de que la URL de retorno sea válida
+          callbackUrl = decodeURIComponent(callbackUrl);
+          if (!callbackUrl.startsWith('/') || callbackUrl === '/') {
             callbackUrl = '/dashboard';
           }
-          
-          console.log('AuthProvider - Redirigiendo a:', callbackUrl);
-          window.location.href = callbackUrl;
-        }, 100);
+        } catch (e) {
+          console.error('Error decoding callbackUrl:', e);
+          callbackUrl = '/dashboard';
+        }
         
+        console.log('AuthProvider - Redirigiendo a:', callbackUrl);
+        window.location.href = callbackUrl;
         return true;
       } else {
-        console.log('AuthProvider - Credenciales inválidas');
+        console.log('AuthProvider - Error en el inicio de sesión:', data.error || 'Error desconocido');
         return false;
       }
     } catch (error) {
@@ -107,12 +101,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    // Obtener el dominio actual
-    const domain = window.location.hostname === 'localhost' ? 'localhost' : '.vercel.app';
+    // Configuración básica para eliminar la cookie
     const secureFlag = process.env.NODE_ENV === 'production' ? '; Secure' : '';
     
-    // Eliminar la cookie de sesión con el dominio correcto
-    document.cookie = `session=; path=/; domain=${domain}; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag}`;
+    // Eliminar la cookie de sesión
+    document.cookie = `session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secureFlag}`;
     
     console.log('AuthProvider - Cookie eliminada');
     
