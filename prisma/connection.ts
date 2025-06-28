@@ -6,14 +6,8 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL no está definida en las variables de entorno')
 }
 
-// Configuración de logging basada en el entorno
-const logLevel: Prisma.LogLevel[] = process.env.NODE_ENV === 'production' 
-  ? ['error', 'warn'] 
-  : ['query', 'info', 'warn', 'error']
-
 const prismaClientSingleton = () => {
   return new PrismaClient({
-    log: logLevel,
     datasources: {
       db: {
         url: process.env.DATABASE_URL
@@ -22,17 +16,12 @@ const prismaClientSingleton = () => {
   })
 }
 
-declare global {
-  // eslint-disable-next-line no-var
-  var prismaGlobal: undefined | ReturnType<typeof prismaClientSingleton>
+type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClientSingleton | undefined
 }
 
-// En producción, siempre crea una nueva instancia
-// En desarrollo, reutiliza la instancia si existe
-const prisma = globalThis.prismaGlobal ?? prismaClientSingleton()
+export const prisma = globalForPrisma.prisma ?? prismaClientSingleton()
 
-if (process.env.NODE_ENV !== 'production') {
-  globalThis.prismaGlobal = prisma
-}
-
-export default prisma
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
