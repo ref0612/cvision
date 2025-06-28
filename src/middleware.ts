@@ -29,15 +29,22 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Configuración del dominio
+  const isProduction = process.env.NODE_ENV === 'production';
+  const domain = isProduction ? '.cvision-six.vercel.app' : 'localhost';
+  
   // Verificar la cookie de sesión
   const sessionCookie = request.cookies.get('session');
   const isAuthenticated = sessionCookie?.value === 'true';
   
   // Log de todas las cookies para depuración
   const allCookies = request.cookies.getAll();
-  console.log('Todas las cookies:', allCookies);
+  console.log('--- Middleware ---');
+  console.log('Ruta solicitada:', pathname);
+  console.log('Dominio actual:', domain);
+  console.log('Cookies recibidas:', allCookies);
   console.log('Cookie de sesión:', sessionCookie?.value || 'No encontrada');
-  console.log('Autenticado:', isAuthenticated);
+  console.log('Usuario autenticado:', isAuthenticated);
   
   // Si es una solicitud a la API de login, permitir el acceso
   if (pathname === '/api/login') {
@@ -48,7 +55,10 @@ export async function middleware(request: NextRequest) {
   // Si es una ruta de API, permitir el acceso
   if (pathname.startsWith('/api/')) {
     console.log(`Permitiendo acceso a ruta de API: ${pathname}`);
-    return NextResponse.next();
+    const response = NextResponse.next();
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Allow-Origin', isProduction ? 'https://cvision-six.vercel.app' : 'http://localhost:3000');
+    return response;
   }
 
   // Si es la ruta de login
@@ -81,8 +91,14 @@ export async function middleware(request: NextRequest) {
     // Crear respuesta de redirección
     const response = NextResponse.redirect(loginUrl);
     
-    // Asegurarse de que las cabeceras de caché no interfieran
-    response.headers.set('Cache-Control', 'no-store, max-age=0');
+    // Configurar cabeceras para evitar caché
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    // Configurar CORS
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Allow-Origin', isProduction ? 'https://cvision-six.vercel.app' : 'http://localhost:3000');
     
     return response;
   }

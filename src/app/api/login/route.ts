@@ -17,14 +17,32 @@ export async function POST(request: Request) {
     // Crear respuesta exitosa
     const response = NextResponse.json(
       { success: true },
-      { status: 200 }
+      { 
+        status: 200,
+        headers: {
+          'Cache-Control': 'no-store, max-age=0',
+          'Pragma': 'no-cache'
+        }
+      }
     );
     
-    // Establecer la cookie manualmente
-    const cookieValue = `session=true; Path=/; Max-Age=86400; ${process.env.NODE_ENV === 'production' ? 'Secure; ' : ''}SameSite=Lax; HttpOnly`;
-    response.headers.set('Set-Cookie', cookieValue);
+    // Configuración de la cookie
+    const isProduction = process.env.NODE_ENV === 'production';
+    const domain = isProduction ? '.cvision-six.vercel.app' : 'localhost';
     
-    console.log('Cookie establecida:', cookieValue);
+    // Establecer la cookie manualmente
+    response.cookies.set({
+      name: 'session',
+      value: 'true',
+      path: '/',
+      domain: domain,
+      maxAge: 60 * 60 * 24, // 1 día
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax'
+    });
+    
+    console.log('Cookie configurada para el dominio:', domain);
     
     return response;
     

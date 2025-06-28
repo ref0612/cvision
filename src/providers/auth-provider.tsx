@@ -38,7 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // La cookie debe existir y tener el valor 'true'
     const hasValidSession = sessionCookie !== undefined && sessionCookie.includes('true');
     
-    console.log('Cookies encontradas:', document.cookie || 'No hay cookies');
+    // Log detallado para depuración
+    console.log('URL actual:', window.location.href);
+    console.log('Cookies disponibles:', document.cookie || 'No hay cookies');
     console.log('Cookie de sesión encontrada:', sessionCookie || 'No encontrada');
     console.log('Sesión válida:', hasValidSession);
     
@@ -120,44 +122,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       
+      // Configurar la URL de la API
+      const apiUrl = '/api/login';
+      
+      console.log('Realizando petición a:', apiUrl);
+      
       // Realizar la petición de login
-      const response = await fetch('/api/login', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         credentials: 'include', // Importante para incluir cookies
         body: JSON.stringify({ username, password }),
       });
       
-      const data = await response.json();
+      console.log('Respuesta recibida:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
+      const data = await response.json().catch(() => ({}));
       
       if (response.ok && data.success) {
         console.log('Login exitoso');
         
-        // Actualizar el estado de autenticación
-        setIsAuthenticated(true);
-        
-        // Obtener la URL de redirección
-        const urlParams = new URLSearchParams(window.location.search);
-        let callbackUrl = urlParams.get('callbackUrl') || '/dashboard';
-        
-        try {
-          // Asegurarse de que la URL de retorno sea válida
-          callbackUrl = decodeURIComponent(callbackUrl);
-          if (!callbackUrl.startsWith('/') || callbackUrl === '/') {
-            callbackUrl = '/dashboard';
-          }
-        } catch (e) {
-          console.error('Error al decodificar callbackUrl:', e);
-          callbackUrl = '/dashboard';
-        }
-        
-        console.log('Redirigiendo a:', callbackUrl);
-        
-        // Forzar una recarga completa para asegurar que el estado se actualice
-        // Usamos replace para evitar que el usuario pueda volver atrás a la pantalla de login
-        window.location.replace(callbackUrl);
+        // Forzar una recarga completa para asegurar que las cookies se establezcan
+        // antes de intentar redirigir
+        window.location.reload();
         return true;
       } else {
         const errorMessage = data.error || 'Error desconocido al iniciar sesión';
