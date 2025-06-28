@@ -12,6 +12,17 @@ export async function middleware(request: NextRequest) {
     pathname === path || pathname.startsWith(`${path}/`)
   );
 
+  // Si es la ruta de login y ya está autenticado, redirigir al dashboard
+  if (pathname.startsWith('/login')) {
+    const sessionCookie = request.cookies.get('session');
+    if (sessionCookie?.value === 'true') {
+      console.log('Middleware - Usuario autenticado en /login, redirigiendo a /dashboard');
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // Permitir acceso a rutas públicas
   if (isPublicPath) {
     console.log('Middleware - Ruta pública, acceso permitido');
     return NextResponse.next();
@@ -21,17 +32,16 @@ export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get('session');
   const isAuthenticated = sessionCookie?.value === 'true';
   
-  console.log('Middleware - Cookie de sesión:', sessionCookie);
+  console.log('Middleware - Cookie de sesión:', sessionCookie?.value);
   console.log('Middleware - Autenticado:', isAuthenticated);
 
-  // Si el usuario NO está autenticado, redirigir a /login con la URL de retorno
+  // Si el usuario NO está autenticado, redirigir a /login
   if (!isAuthenticated) {
+    console.log('Middleware - Usuario no autenticado, redirigiendo a /login');
     const loginUrl = new URL('/login', request.url);
     // Solo mantener la ruta actual si no es la raíz
     if (pathname !== '/') {
       loginUrl.searchParams.set('callbackUrl', pathname);
-    } else {
-      loginUrl.searchParams.set('callbackUrl', '/dashboard');
     }
     return NextResponse.redirect(loginUrl);
   }
@@ -54,8 +64,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Aplicar a todas las rutas excepto las estáticas y las de API
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|api|_vercel|assets).*)',
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 };

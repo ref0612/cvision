@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 type AuthContextType = {
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
 };
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Función para verificar autenticación
   const checkAuth = (): boolean => {
@@ -56,11 +58,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('AuthProvider - Iniciando login con usuario:', username);
     
     try {
+      setIsLoading(true);
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Importante para incluir cookies
         body: JSON.stringify({ username, password }),
       });
       
@@ -88,15 +92,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         
         console.log('AuthProvider - Redirigiendo a:', callbackUrl);
+        
+        // Forzar una recarga completa para asegurar que el estado se actualice
         window.location.href = callbackUrl;
         return true;
       } else {
-        console.log('AuthProvider - Error en el inicio de sesión:', data.error || 'Error desconocido');
-        return false;
+        const errorMessage = data.error || 'Error desconocido';
+        console.log('AuthProvider - Error en el inicio de sesión:', errorMessage);
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error('Error en login:', error);
-      return false;
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -126,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
