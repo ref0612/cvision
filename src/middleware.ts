@@ -5,6 +5,7 @@ const publicPaths = ['/login', '/_next', '/favicon.ico', '/api', '/_vercel', '/a
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  console.log('Middleware - Ruta solicitada:', pathname);
 
   // Si es una ruta pública, permitir el acceso
   const isPublicPath = publicPaths.some(path => 
@@ -12,12 +13,16 @@ export async function middleware(request: NextRequest) {
   );
 
   if (isPublicPath) {
+    console.log('Middleware - Ruta pública, acceso permitido');
     return NextResponse.next();
   }
 
   // Verificar la cookie de sesión
   const sessionCookie = request.cookies.get('session');
   const isAuthenticated = sessionCookie?.value === 'true';
+  
+  console.log('Middleware - Cookie de sesión:', sessionCookie);
+  console.log('Middleware - Autenticado:', isAuthenticated);
 
   // Si el usuario NO está autenticado, redirigir a /login con la URL de retorno
   if (!isAuthenticated) {

@@ -27,8 +27,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (typeof document === 'undefined') return false;
     
     // Verificar si la cookie de sesión existe
+    console.log('AuthProvider - Todas las cookies:', document.cookie);
     const cookies = document.cookie.split(';').map(c => c.trim());
-    const hasSession = cookies.some(cookie => cookie.startsWith('session=') && cookie.includes('true'));
+    const sessionCookie = cookies.find(cookie => cookie.startsWith('session='));
+    const hasSession = !!sessionCookie && sessionCookie.includes('true');
+    
+    console.log('AuthProvider - Cookie de sesión encontrada:', sessionCookie);
+    console.log('AuthProvider - Sesión válida:', hasSession);
     
     return hasSession;
   };
@@ -48,14 +53,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
+    console.log('AuthProvider - Iniciando login con usuario:', username);
+    
     try {
       // Simulamos una petición de red
       await new Promise(resolve => setTimeout(resolve, 500));
       
       if (username === VALID_CREDENTIALS.username && password === VALID_CREDENTIALS.password) {
+        console.log('AuthProvider - Credenciales válidas');
+        
         // Establecer cookie de sesión
         const secureFlag = process.env.NODE_ENV === 'production' ? '; Secure' : '';
-        document.cookie = `session=true; path=/; max-age=86400; SameSite=Lax${secureFlag}`;
+        const cookieString = `session=true; path=/; max-age=86400; SameSite=Lax${secureFlag}`;
+        document.cookie = cookieString;
+        
+        console.log('AuthProvider - Cookie establecida:', cookieString);
         
         // Actualizar el estado
         setIsAuthenticated(true);
@@ -75,12 +87,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           callbackUrl = '/dashboard';
         }
         
+        console.log('AuthProvider - Redirigiendo a:', callbackUrl);
         window.location.href = callbackUrl;
         return true;
+      } else {
+        console.log('AuthProvider - Credenciales inválidas');
+        return false;
       }
-      return false;
     } catch (error) {
-      console.error('Error during login:', error);
+      console.error('Error en login:', error);
       return false;
     }
   };
