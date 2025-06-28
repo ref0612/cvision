@@ -20,9 +20,11 @@ export default function LoginPage() {
   // Redirigir si ya está autenticado
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard');
+      const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+      router.push(callbackUrl);
+      router.refresh(); // Forzar recarga para asegurar que se apliquen los cambios
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, searchParams]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

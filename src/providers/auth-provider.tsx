@@ -19,20 +19,26 @@ const VALID_CREDENTIALS = {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  // Deriva isAuthenticated de la cookie de sesión en cada render
-  function getSessionAuth(): boolean {
-    if (typeof document === 'undefined') return false;
-    const cookies = document.cookie.split(';').map(cookie => cookie.trim());
-    const sessionCookie = cookies.find(cookie => cookie.startsWith('session='));
-    return !!(sessionCookie && sessionCookie.includes('true'));
-  }
-  const isAuthenticated = getSessionAuth();
-  // Log visual y de consola para depuración
-  if (typeof window !== 'undefined') {
-    console.log('Cookie actual:', document.cookie);
-    console.log('isAuthenticated:', isAuthenticated);
-  }
+  // Efecto para sincronizar el estado de autenticación con las cookies
+  useEffect(() => {
+    const checkAuth = () => {
+      if (typeof document === 'undefined') return false;
+      const cookies = document.cookie.split(';').map(cookie => cookie.trim());
+      const sessionCookie = cookies.find(cookie => cookie.startsWith('session='));
+      const authStatus = !!(sessionCookie && sessionCookie.includes('true'));
+      setIsAuthenticated(authStatus);
+      return authStatus;
+    };
+
+    // Verificar autenticación al montar
+    checkAuth();
+
+    // Escuchar cambios en las cookies (opcional, para sincronizar entre pestañas)
+    const interval = setInterval(checkAuth, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
@@ -48,6 +54,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           'SameSite=Lax',
           process.env.NODE_ENV === 'production' ? 'Secure' : ''
         ].filter(Boolean).join('; ');
+        
+        // Actualizar el estado de autenticación
+        setIsAuthenticated(true);
         
         // Usar document.cookie directamente para asegurar que se establezca
         document.cookie = cookieOptions;
@@ -81,9 +90,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    // Eliminar la cookie de sesión
-    document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-    window.location.href = '/login'; // Hard redirect
+    // Actualizar el estado primero
+    setIsAuthenticated(false);
+    
+    // Luego eliminar la cookie de sesión
+    document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    
+    // Redirigir al login
+    router.push('/login');
+    router.refresh(); // Forzar recarga para asegurar que se apliquen los cambios
   };
 
   return (
