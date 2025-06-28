@@ -27,18 +27,29 @@ export async function middleware(request: NextRequest) {
   // Si el usuario NO está autenticado, redirigir a /login con la URL de retorno
   if (!isAuthenticated) {
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('callbackUrl', '/dashboard');
+    // Solo mantener la ruta actual si no es la raíz
+    if (pathname !== '/') {
+      loginUrl.searchParams.set('callbackUrl', pathname);
+    } else {
+      loginUrl.searchParams.set('callbackUrl', '/dashboard');
+    }
     return NextResponse.redirect(loginUrl);
   }
 
   // Usuario autenticado, permitir acceso
   const response = NextResponse.next();
   
+  // Obtener el dominio actual
+  const domain = request.nextUrl.hostname === 'localhost' 
+    ? 'localhost' 
+    : '.vercel.app';
+  
   // Refrescar la cookie para extender la sesión
   response.cookies.set({
     name: 'session',
     value: 'true',
     path: '/',
+    domain,
     sameSite: 'lax',
     maxAge: 60 * 60 * 24, // 1 día
     httpOnly: true,
