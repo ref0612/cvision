@@ -9,7 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 
 const AnalyzeFinancialDataInputSchema = z.object({
   financialData: z
@@ -57,7 +57,7 @@ const analyzeFinancialDataFlow = ai.defineFlow(
     inputSchema: AnalyzeFinancialDataInputSchema,
     outputSchema: AnalyzeFinancialDataOutputSchema,
   },
-  async input => {
+  async (input: AnalyzeFinancialDataInput) => {
     const {output} = await prompt(input);
     return output!;
   }

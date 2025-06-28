@@ -1,5 +1,5 @@
 // Usar la conexión personalizada que maneja mejor las conexiones
-import prisma from './connection';
+import { prisma } from './connection';
 
 // Función para limpiar datos existentes
 async function cleanDatabase() {

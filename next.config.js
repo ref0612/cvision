@@ -9,44 +9,43 @@ const nextConfig = {
   // Configure images
   images: {
     domains: ['localhost'],
-    // Configuración para optimización de imágenes
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
-    // Deshabilitar Image Optimization API
     unoptimized: process.env.NODE_ENV === 'production',
   },
   
-  // Enable SWC minification
-  swcMinify: true,
-  
   // Enable server actions
   experimental: {
-    serverActions: true,
-    serverComponentsExternalPackages: ['@prisma/client', '@prisma/adapter-pg'],
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'your-production-domain.com']
+    }
   },
   
+  // External packages for server components
+  serverExternalPackages: ['@prisma/client'],
+  
   // Configure webpack
-  webpack: (config, { isServer, webpack }) => {
-    // Fixes npm packages that depend on `node:` protocol
-    config.resolve.fallback = { 
-      ...config.resolve.fallback,
-      // Asegurar que los módulos de Node.js estén disponibles
-      fs: false,
-      net: false,
-      tls: false,
-      dns: false,
-      child_process: false,
-      // Añadir soporte para módulos de Node
-      ...(isServer ? {
-        fs: 'empty',
-        net: 'empty',
-        tls: 'empty',
-        dns: 'empty',
-        child_process: 'empty'
-      } : {})
-    };
+  webpack: (config, { isServer, dev }) => {
+    if (!isServer) {
+      // Configuración solo para el cliente
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        dns: false,
+        child_process: false
+      };
+    }
 
-    // Important: return the modified config
+    // Excluir archivos de IA del build de producción
+    if (!dev) {
+      config.module.rules.push({
+        test: /src\/ai\/(dev|genkit)\.ts$/,
+        use: 'null-loader'
+      });
+    }
+
     return config;
   },
   

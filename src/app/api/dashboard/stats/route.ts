@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '../../../../../prisma/connection';
+import { prisma } from '../../../../../prisma/connection';
 
 interface InventoryStats {
   totalItems: number;
