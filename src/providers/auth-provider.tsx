@@ -29,6 +29,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // En el servidor, asumimos que el middleware ya verificó la autenticación
     if (typeof document === 'undefined') return false;
     
+    console.log('--- Verificación de sesión ---');
+    
     // Verificar si hay una cookie de sesión
     const cookies = document.cookie.split(';').map(cookie => cookie.trim());
     const sessionCookie = cookies.find(cookie => cookie.startsWith('session='));
@@ -36,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // La cookie debe existir y tener el valor 'true'
     const hasValidSession = sessionCookie !== undefined && sessionCookie.includes('true');
     
-    console.log('--- Verificación de sesión ---');
+    console.log('Cookies encontradas:', document.cookie || 'No hay cookies');
     console.log('Cookie de sesión encontrada:', sessionCookie || 'No encontrada');
     console.log('Sesión válida:', hasValidSession);
     
@@ -50,6 +52,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     const verifyAuth = async () => {
       try {
+        // Pequeño retraso para asegurar que las cookies estén disponibles
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Verificar autenticación
         const isAuth = checkAuth();
         console.log('Estado de autenticación:', isAuth);
@@ -60,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Solo manejar redirecciones si ya está inicializado
         if (isInitialized) {
           // Si no está autenticado y no está en login, redirigir a login
-          if (!isAuth && window.location.pathname !== '/login') {
+          if (!isAuth && !window.location.pathname.startsWith('/login')) {
             console.log('No autenticado, redirigiendo a /login');
             const loginUrl = new URL('/login', window.location.origin);
             loginUrl.searchParams.set('callbackUrl', window.location.pathname);
@@ -69,9 +74,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           
           // Si está autenticado y está en login, redirigir al dashboard
-          if (isAuth && window.location.pathname === '/login') {
+          if (isAuth && window.location.pathname.startsWith('/login')) {
             const urlParams = new URLSearchParams(window.location.search);
-            const callbackUrl = urlParams.get('callbackUrl') || '/dashboard';
+            let callbackUrl = urlParams.get('callbackUrl') || '/dashboard';
+            
+            // Asegurarse de que la URL de retorno sea válida
+            try {
+              callbackUrl = decodeURIComponent(callbackUrl);
+              if (!callbackUrl.startsWith('/')) {
+                callbackUrl = '/dashboard';
+              }
+            } catch (e) {
+              console.error('Error al decodificar callbackUrl:', e);
+              callbackUrl = '/dashboard';
+            }
+            
             console.log('Autenticado, redirigiendo a:', callbackUrl);
             // Usar replace para evitar que el usuario pueda volver atrás a /login
             window.location.replace(callbackUrl);
@@ -87,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('Error al verificar autenticación:', error);
         // En caso de error, redirigir a login
-        if (window.location.pathname !== '/login') {
+        if (!window.location.pathname.startsWith('/login')) {
           window.location.href = '/login';
         }
       }

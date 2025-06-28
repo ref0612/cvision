@@ -33,12 +33,21 @@ export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get('session');
   const isAuthenticated = sessionCookie?.value === 'true';
   
+  // Log de todas las cookies para depuración
+  const allCookies = request.cookies.getAll();
+  console.log('Todas las cookies:', allCookies);
   console.log('Cookie de sesión:', sessionCookie?.value || 'No encontrada');
   console.log('Autenticado:', isAuthenticated);
-
-  // Si es la ruta de api/login, permitir el acceso
+  
+  // Si es una solicitud a la API de login, permitir el acceso
   if (pathname === '/api/login') {
-    console.log('Acceso a API de login permitido');
+    console.log('Permitiendo acceso a /api/login');
+    return NextResponse.next();
+  }
+
+  // Si es una ruta de API, permitir el acceso
+  if (pathname.startsWith('/api/')) {
+    console.log(`Permitiendo acceso a ruta de API: ${pathname}`);
     return NextResponse.next();
   }
 
@@ -55,13 +64,27 @@ export async function middleware(request: NextRequest) {
   // Si no está autenticado, redirigir a login
   if (!isAuthenticated) {
     console.log('Usuario no autenticado, redirigiendo a /login');
+    
+    // No redirigir si ya está en la página de login
+    if (pathname === '/login') {
+      return NextResponse.next();
+    }
+    
     const loginUrl = new URL('/login', request.url);
     // Solo mantener la ruta actual si no es la raíz
     if (pathname !== '/') {
-      loginUrl.searchParams.set('callbackUrl', pathname);
+      const encodedCallbackUrl = encodeURIComponent(pathname);
+      loginUrl.searchParams.set('callbackUrl', encodedCallbackUrl);
       console.log('Redirigiendo a login con callbackUrl:', pathname);
     }
-    return NextResponse.redirect(loginUrl);
+    
+    // Crear respuesta de redirección
+    const response = NextResponse.redirect(loginUrl);
+    
+    // Asegurarse de que las cabeceras de caché no interfieran
+    response.headers.set('Cache-Control', 'no-store, max-age=0');
+    
+    return response;
   }
 
   // Si llegamos aquí, el usuario está autenticado y puede acceder a la ruta

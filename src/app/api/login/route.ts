@@ -14,16 +14,17 @@ export async function POST(request: Request) {
       );
     }
     
-    // Crear respuesta exitosa con la cookie
+    // Crear respuesta exitosa
     const response = NextResponse.json(
       { success: true },
-      { 
-        status: 200,
-        headers: {
-          'Set-Cookie': `session=true; Path=/; Max-Age=86400; ${process.env.NODE_ENV === 'production' ? 'Secure; ' : ''}SameSite=Lax; HttpOnly`
-        }
-      }
+      { status: 200 }
     );
+    
+    // Establecer la cookie manualmente
+    const cookieValue = `session=true; Path=/; Max-Age=86400; ${process.env.NODE_ENV === 'production' ? 'Secure; ' : ''}SameSite=Lax; HttpOnly`;
+    response.headers.set('Set-Cookie', cookieValue);
+    
+    console.log('Cookie establecida:', cookieValue);
     
     return response;
     
