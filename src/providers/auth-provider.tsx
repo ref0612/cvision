@@ -147,6 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: Object.fromEntries(response.headers.entries())
       });
       
+      // Procesar la respuesta
       const data = await response.json().catch(() => ({
         success: false,
         error: 'Error al procesar la respuesta del servidor'
@@ -162,7 +163,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Obtener la URL de redirección de los parámetros de búsqueda o usar la ruta por defecto
         const searchParams = new URLSearchParams(window.location.search);
-        const callbackUrl = searchParams.get('callbackUrl') || '/';
+        let callbackUrl = searchParams.get('callbackUrl') || '/';
+        
+        // Asegurarse de que la URL de callback sea relativa y segura
+        try {
+          const url = new URL(callbackUrl, window.location.origin);
+          // Solo permitir rutas dentro del mismo origen
+          if (url.origin === window.location.origin) {
+            callbackUrl = url.pathname + url.search;
+          } else {
+            callbackUrl = '/';
+          }
+        } catch (e) {
+          console.error('Error al parsear la URL de callback:', e);
+          callbackUrl = '/';
+        }
         
         console.log('Redirigiendo a:', callbackUrl);
         
@@ -177,8 +192,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Error en proceso de login:', error);
-      // Forzar recarga de la página para limpiar cualquier estado inconsistente
+      // Forzar recarga de la página solo si hay un error de red
       if (error instanceof Error && error.message.includes('NetworkError')) {
+        console.log('Error de red, recargando página...');
         window.location.reload();
       }
       throw error;

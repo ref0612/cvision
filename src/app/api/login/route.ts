@@ -28,7 +28,13 @@ export async function POST(request: Request) {
     
     console.log('Inicio de sesión exitoso para usuario:', username);
     
-    // Configurar la cookie de sesión
+    // Configuración del dominio para la cookie
+    const isProduction = process.env.NODE_ENV === 'production';
+    const domain = isProduction ? '.cvision-six.vercel.app' : 'localhost';
+    
+    console.log('Configurando cookie de sesión para dominio:', domain);
+    
+    // Crear la respuesta exitosa
     const response = NextResponse.json(
       { 
         success: true, 
@@ -42,17 +48,14 @@ export async function POST(request: Request) {
           'Pragma': 'no-cache',
           'Expires': '0',
           'Access-Control-Allow-Credentials': 'true',
-          'Access-Control-Allow-Origin': 'https://cvision-six.vercel.app',
+          'Access-Control-Allow-Origin': isProduction ? 'https://cvision-six.vercel.app' : 'http://localhost:3000',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
         }
       }
     );
     
     // Configurar la cookie de sesión segura
-    const isProduction = process.env.NODE_ENV === 'production';
-    const domain = isProduction ? '.cvision-six.vercel.app' : 'localhost';
-    
-    console.log('Configurando cookie de sesión para dominio:', domain);
-    
     response.cookies.set({
       name: 'session',
       value: 'true',
@@ -65,7 +68,6 @@ export async function POST(request: Request) {
     });
     
     console.log('Cookie de sesión configurada correctamente');
-    console.log('Cookie configurada para el dominio:', domain);
     
     return response;
     
