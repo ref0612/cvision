@@ -8,23 +8,43 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function LoginPage() {
+  const { isAuthenticated, login, isLoading: isAuthLoading } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const { login } = useAuth();
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Mostrar loader mientras se verifica la autenticación
+  if (isAuthLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // Si ya está autenticado, mostrar mensaje de redirección
+  if (isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p>Redirigiendo al dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     if (!username || !password) {
       setError('Por favor ingresa usuario y contraseña');
       return;
     }
 
-    setIsLoading(true);
-    
+    setIsSubmitting(true);
+
     try {
       const success = await login(username, password);
       if (!success) {
@@ -34,7 +54,7 @@ export default function LoginPage() {
       console.error('Login error:', err);
       setError(err.message || 'Ocurrió un error al iniciar sesión');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -45,13 +65,13 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold">Iniciar Sesión</h1>
           <p className="mt-2 text-sm text-gray-600">Ingresa tus credenciales para continuar</p>
         </div>
-        
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
             <span className="block sm:inline">{error}</span>
           </div>
         )}
-        
+
         <form className="mt-8 space-y-6 bg-white p-8 rounded-lg shadow-md" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
@@ -66,7 +86,7 @@ export default function LoginPage() {
                 autoComplete="username"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="password">Contraseña</Label>
               <Input
@@ -84,10 +104,10 @@ export default function LoginPage() {
           <div>
             <Button
               type="submit"
-              className="w-full flex justify-center"
-              disabled={isLoading}
+              className="w-full"
+              disabled={isSubmitting || isAuthLoading}
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Iniciando sesión...

@@ -40,19 +40,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return hasSession;
   };
 
-  // Efecto para verificar autenticación al montar
+  // Efecto para verificar autenticación al cargar
   useEffect(() => {
-    const authStatus = checkAuth();
-    setIsAuthenticated(authStatus);
+    console.log('\n--- AuthProvider ---');
+    console.log('Verificando autenticación en ruta:', window.location.pathname);
     
-    // Si no está autenticado y no está en la página de login, redirigir
-    if (!authStatus && !window.location.pathname.startsWith('/login')) {
-      window.location.href = '/login';
-      return;
+    // Verificar autenticación
+    const isAuth = checkAuth();
+    console.log('Estado de autenticación:', isAuth);
+    
+    // Actualizar estado
+    setIsAuthenticated(isAuth);
+    
+    // Solo manejar redirecciones si ya está inicializado
+    if (isInitialized) {
+      // Si no está autenticado y no está en login, redirigir a login
+      if (!isAuth && window.location.pathname !== '/login') {
+        console.log('Redirigiendo a /login');
+        const loginUrl = new URL('/login', window.location.origin);
+        loginUrl.searchParams.set('callbackUrl', window.location.pathname);
+        window.location.href = loginUrl.toString();
+        return;
+      }
+      
+      // Si está autenticado y está en login, redirigir al dashboard
+      if (isAuth && window.location.pathname === '/login') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const callbackUrl = urlParams.get('callbackUrl') || '/dashboard';
+        console.log('Redirigiendo a:', callbackUrl);
+        window.location.href = callbackUrl;
+        return;
+      }
     }
     
-    setIsInitialized(true);
-  }, []);
+    // Marcar como inicializado después de la primera verificación
+    if (!isInitialized) {
+      console.log('AuthProvider inicializado');
+      setIsInitialized(true);
+    }
+  }, [isInitialized]);
 
   const login = async (username: string, password: string): Promise<boolean> => {
     console.log('AuthProvider - Iniciando login con usuario:', username);
