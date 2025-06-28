@@ -17,14 +17,8 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  // Redirigir si ya está autenticado
-  useEffect(() => {
-    if (isAuthenticated) {
-      const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
-      router.push(callbackUrl);
-      router.refresh(); // Forzar recarga para asegurar que se apliquen los cambios
-    }
-  }, [isAuthenticated, router, searchParams]);
+  // No necesitamos este efecto ya que el AuthProvider manejará la redirección
+  // para evitar bucles de redirección
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,11 +33,10 @@ export default function LoginPage() {
     
     try {
       const success = await login(username, password);
-      if (success) {
-        // La redirección se manejará en el efecto cuando isAuthenticated cambie
-      } else {
+      if (!success) {
         setError('Usuario o contraseña incorrectos');
       }
+      // No necesitamos manejar el éxito aquí, el AuthProvider se encargará de la redirección
     } catch (err) {
       setError('Ocurrió un error al iniciar sesión');
       console.error('Login error:', err);

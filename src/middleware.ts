@@ -19,15 +19,6 @@ export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get('session');
   const isAuthenticated = sessionCookie?.value === 'true';
 
-  console.log('Middleware - Path:', pathname);
-  console.log('Middleware - Session cookie:', sessionCookie?.value);
-  console.log('Middleware - Is authenticated:', isAuthenticated);
-
-  // Si el usuario está autenticado y trata de acceder a /login, redirigir a /dashboard
-  if (isAuthenticated && pathname === '/login') {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
   // Si el usuario NO está autenticado, redirigir a /login
   if (!isAuthenticated) {
     const loginUrl = new URL('/login', request.url);

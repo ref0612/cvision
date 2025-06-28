@@ -1,7 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 
 type AuthContextType = {
   isAuthenticated: boolean;
@@ -19,26 +19,41 @@ const VALID_CREDENTIALS = {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
-  // Efecto para sincronizar el estado de autenticación con las cookies
-  useEffect(() => {
-    const checkAuth = () => {
-      if (typeof document === 'undefined') return false;
-      const cookies = document.cookie.split(';').map(cookie => cookie.trim());
-      const sessionCookie = cookies.find(cookie => cookie.startsWith('session='));
-      const authStatus = !!(sessionCookie && sessionCookie.includes('true'));
-      setIsAuthenticated(authStatus);
-      return authStatus;
-    };
-
-    // Verificar autenticación al montar
-    checkAuth();
-
-    // Escuchar cambios en las cookies (opcional, para sincronizar entre pestañas)
-    const interval = setInterval(checkAuth, 1000);
-    return () => clearInterval(interval);
+  // Función para verificar autenticación
+  const checkAuth = useCallback((): boolean => {
+    if (typeof document === 'undefined') return false;
+    const cookies = document.cookie.split(';').map(cookie => cookie.trim());
+    const sessionCookie = cookies.find(cookie => cookie.startsWith('session='));
+    const authStatus = !!(sessionCookie && sessionCookie.includes('true'));
+    setIsAuthenticated(authStatus);
+    return authStatus;
   }, []);
+
+  // Efecto para verificar autenticación al montar y en cambios de ruta
+  useEffect(() => {
+    const authStatus = checkAuth();
+    
+    // Si no está autenticado y no está en la página de login, redirigir
+    if (!authStatus && !pathname.startsWith('/login')) {
+      const loginUrl = new URL('/login', window.location.origin);
+      loginUrl.searchParams.set('callbackUrl', pathname);
+      window.location.href = loginUrl.toString();
+      return;
+    }
+    
+    // Si está autenticado y está en la página de login, redirigir al dashboard
+    if (authStatus && pathname.startsWith('/login')) {
+      const callbackUrl = new URLSearchParams(window.location.search).get('callbackUrl') || '/dashboard';
+      window.location.href = callbackUrl;
+      return;
+    }
+    
+    setIsInitialized(true);
+  }, [pathname, checkAuth]);
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
@@ -55,11 +70,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           process.env.NODE_ENV === 'production' ? 'Secure' : ''
         ].filter(Boolean).join('; ');
         
-        // Actualizar el estado de autenticación
-        setIsAuthenticated(true);
-        
-        // Usar document.cookie directamente para asegurar que se establezca
+        // Establecer la cookie
         document.cookie = cookieOptions;
+        
+        // Actualizar el estado después de establecer la cookie
+        setIsAuthenticated(true);
         
         console.log('Cookie establecida:', document.cookie);
         
@@ -100,6 +115,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/login');
     router.refresh(); // Forzar recarga para asegurar que se apliquen los cambios
   };
+
+  // No renderizar los hijos hasta que la autenticación se haya verificado
+  if (!isInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
