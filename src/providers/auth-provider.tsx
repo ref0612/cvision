@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Configurar la URL de la API
       const apiUrl = '/api/login';
       
-      console.log('Realizando petición a:', apiUrl);
+      console.log('Realizando petición POST a:', apiUrl);
       
       // Realizar la petición de login
       const response = await fetch(apiUrl, {
@@ -141,16 +141,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Respuesta recibida:', {
         status: response.status,
         statusText: response.statusText,
+        ok: response.ok,
+        redirected: response.redirected,
+        url: response.url,
         headers: Object.fromEntries(response.headers.entries())
       });
+      
+      // Si la respuesta es una redirección, dejamos que el navegador la maneje
+      if (response.redirected) {
+        console.log('Redirección detectada a:', response.url);
+        window.location.href = response.url;
+        return true;
+      }
       
       const data = await response.json().catch(() => ({}));
       
       if (response.ok && data.success) {
-        console.log('Login exitoso');
+        console.log('Login exitoso, recargando página...');
         
         // Forzar una recarga completa para asegurar que las cookies se establezcan
-        // antes de intentar redirigir
         window.location.reload();
         return true;
       } else {

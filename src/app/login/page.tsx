@@ -44,14 +44,21 @@ export default function LoginPage() {
     }
 
     setIsSubmitting(true);
+    setError('');
 
     try {
+      console.log('Enviando solicitud de login...');
       const success = await login(username, password);
+      console.log('Respuesta de login:', success);
+      
       if (!success) {
         setError('Usuario o contraseña incorrectos');
+      } else {
+        console.log('Login exitoso, recargando página...');
+        // No es necesario hacer nada más, el AuthProvider manejará la redirección
       }
     } catch (err: any) {
-      console.error('Login error:', err);
+      console.error('Error en el login:', err);
       setError(err.message || 'Ocurrió un error al iniciar sesión');
     } finally {
       setIsSubmitting(false);
@@ -72,7 +79,12 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form className="mt-8 space-y-6 bg-white p-8 rounded-lg shadow-md" onSubmit={handleSubmit}>
+        <form 
+          className="mt-8 space-y-6 bg-white p-8 rounded-lg shadow-md" 
+          onSubmit={handleSubmit}
+          method="POST"
+          action="/api/login"
+        >
           <div className="space-y-4">
             <div>
               <Label htmlFor="username">Usuario</Label>
