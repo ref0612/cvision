@@ -22,9 +22,13 @@ export async function middleware(request: NextRequest) {
   // Si el usuario NO está autenticado, redirigir a /login
   if (!isAuthenticated) {
     const loginUrl = new URL('/login', request.url);
-    // Solo agregar callbackUrl si no es la raíz
-    const callbackUrl = pathname === '/' ? '/dashboard' : pathname;
-    loginUrl.searchParams.set('callbackUrl', callbackUrl);
+    // Solo agregar callbackUrl si no es la raíz y no es la página de login
+    if (pathname !== '/' && !pathname.startsWith('/login')) {
+      loginUrl.searchParams.set('callbackUrl', pathname);
+    } else {
+      // Si es la raíz, redirigir al dashboard después del login
+      loginUrl.searchParams.set('callbackUrl', '/dashboard');
+    }
     return NextResponse.redirect(loginUrl);
   }
 

@@ -60,8 +60,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Si está autenticado y está en la página de login, redirigir al dashboard
     if (authStatus && pathname.startsWith('/login')) {
-      const callbackUrl = new URLSearchParams(window.location.search).get('callbackUrl') || '/dashboard';
-      window.location.href = callbackUrl;
+      const searchParams = new URLSearchParams(window.location.search);
+      let callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+      
+      // Asegurarse de que la URL de retorno sea válida y no cause bucles
+      if (callbackUrl === '/' || !callbackUrl.startsWith('/')) {
+        callbackUrl = '/dashboard';
+      }
+      
+      // Usar replace para evitar problemas de historial de navegación
+      window.location.replace(callbackUrl);
       return;
     }
     

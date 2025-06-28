@@ -35,8 +35,16 @@ export default function LoginPage() {
       const success = await login(username, password);
       if (!success) {
         setError('Usuario o contraseña incorrectos');
+      } else {
+        // Limpiar los campos después de un inicio de sesión exitoso
+        setUsername('');
+        setPassword('');
+        
+        // Forzar una recarga completa para asegurar que se apliquen todos los cambios de estado
+        const searchParams = new URLSearchParams(window.location.search);
+        const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+        window.location.href = callbackUrl;
       }
-      // No necesitamos manejar el éxito aquí, el AuthProvider se encargará de la redirección
     } catch (err) {
       setError('Ocurrió un error al iniciar sesión');
       console.error('Login error:', err);
