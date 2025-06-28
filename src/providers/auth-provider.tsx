@@ -147,20 +147,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: Object.fromEntries(response.headers.entries())
       });
       
-      // Si la respuesta es una redirección, dejamos que el navegador la maneje
-      if (response.redirected) {
-        console.log('Redirección detectada a:', response.url);
-        window.location.href = response.url;
-        return true;
-      }
+      const data = await response.json().catch(() => ({
+        success: false,
+        error: 'Error al procesar la respuesta del servidor'
+      }));
       
-      const data = await response.json().catch(() => ({}));
+      console.log('Datos de la respuesta:', data);
       
       if (response.ok && data.success) {
-        console.log('Login exitoso, recargando página...');
+        console.log('Login exitoso, actualizando estado de autenticación...');
         
-        // Forzar una recarga completa para asegurar que las cookies se establezcan
-        window.location.reload();
+        // Actualizar el estado de autenticación
+        setIsAuthenticated(true);
+        
+        // Obtener la URL de redirección de los parámetros de búsqueda o usar la ruta por defecto
+        const searchParams = new URLSearchParams(window.location.search);
+        const callbackUrl = searchParams.get('callbackUrl') || '/';
+        
+        console.log('Redirigiendo a:', callbackUrl);
+        
+        // Usar replace para evitar problemas de historial de navegación
+        window.location.href = callbackUrl;
+        
         return true;
       } else {
         const errorMessage = data.error || 'Error desconocido al iniciar sesión';
@@ -169,6 +177,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Error en proceso de login:', error);
+      // Forzar recarga de la página para limpiar cualquier estado inconsistente
+      if (error instanceof Error && error.message.includes('NetworkError')) {
+        window.location.reload();
+      }
       throw error;
     } finally {
       setIsLoading(false);
