@@ -13,7 +13,17 @@ const publicPaths = [
   '/_error',
   '/500',
   '/404',
-  '/dashboard' // Temporalmente hacer pública esta ruta para pruebas
+];
+
+// Rutas que requieren autenticación
+const protectedPaths = [
+  '/dashboard',
+  '/inventory',
+  '/orders',
+  '/income',
+  '/expenses',
+  '/cost-analysis',
+  '/ai-suggestions',
 ];
 
 // Configuración del middleware
@@ -37,9 +47,28 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // 2. Para todas las demás rutas, redirigir a login temporalmente
-  console.log('Redirigiendo a login desde:', pathname);
-  const loginUrl = new URL('/login', request.url);
-  loginUrl.searchParams.set('callbackUrl', pathname);
-  return NextResponse.redirect(loginUrl);
+  // 2. Verificar si la ruta requiere autenticación
+  const isProtectedPath = protectedPaths.some(path => 
+    pathname === path || pathname.startsWith(`${path}/`)
+  );
+  
+  if (!isProtectedPath) {
+    // Si no es una ruta protegida, permitir acceso
+    return NextResponse.next();
+  }
+  
+  // 3. Para rutas protegidas, verificar la cookie de sesión
+  const sessionCookie = request.cookies.get('session');
+  const isAuthenticated = sessionCookie && sessionCookie.value === 'true';
+  
+  if (!isAuthenticated) {
+    console.log('Usuario no autenticado, redirigiendo a login desde:', pathname);
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('callbackUrl', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+  
+  // 4. Si está autenticado, permitir acceso a la ruta protegida
+  console.log('Usuario autenticado, permitiendo acceso a:', pathname);
+  return NextResponse.next();
 }

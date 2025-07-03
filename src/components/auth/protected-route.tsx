@@ -1,39 +1,33 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { useAuth } from '@/providers/auth-provider';
 import { Loader2 } from 'lucide-react';
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const [isLoading, setIsLoading] = useState(true);
-  const pathname = usePathname();
+  const { isAuthenticated, isLoading } = useAuth();
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // Solo ejecutar en el cliente
-    if (typeof window === 'undefined') return;
-    
-    // Verificar si hay una cookie de sesión
-    const sessionCookie = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('session='));
-    
-    const isAuthenticated = sessionCookie && sessionCookie.includes('true');
-    
-    if (!isAuthenticated) {
-      // Si no está autenticado, redirigir a login
-      const loginUrl = new URL('/login', window.location.origin);
-      loginUrl.searchParams.set('callbackUrl', pathname || '/dashboard');
-      window.location.href = loginUrl.toString();
-    } else {
-      // Si está autenticado, mostrar el contenido
-      setIsLoading(false);
-    }
-  }, [pathname]);
+    setIsClient(true);
+  }, []);
 
-  if (isLoading) {
+  // Mostrar loader mientras se verifica la autenticación
+  if (!isClient || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Si no está autenticado, el middleware ya debería haber redirigido
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p>Verificando autenticación...</p>
+        </div>
       </div>
     );
   }

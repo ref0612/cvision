@@ -8,20 +8,11 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function LoginPage() {
-  const { isAuthenticated, login, isLoading: isAuthLoading } = useAuth();
+  const { isAuthenticated, login, isLoading } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Mostrar loader mientras se verifica la autenticación
-  if (isAuthLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
 
   // Si ya está autenticado, mostrar mensaje de redirección
   if (isAuthenticated) {
@@ -47,15 +38,9 @@ export default function LoginPage() {
     setError('');
 
     try {
-      console.log('Enviando solicitud de login...');
       const success = await login(username, password);
-      console.log('Respuesta de login:', success);
-      
       if (!success) {
         setError('Usuario o contraseña incorrectos');
-      } else {
-        console.log('Login exitoso, recargando página...');
-        // No es necesario hacer nada más, el AuthProvider manejará la redirección
       }
     } catch (err: any) {
       console.error('Error en el login:', err);
@@ -82,8 +67,6 @@ export default function LoginPage() {
         <form 
           className="mt-8 space-y-6 bg-white p-8 rounded-lg shadow-md" 
           onSubmit={handleSubmit}
-          method="POST"
-          action="/api/login"
         >
           <div className="space-y-4">
             <div>
@@ -117,7 +100,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full"
-              disabled={isSubmitting || isAuthLoading}
+              disabled={isSubmitting || isLoading}
             >
               {isSubmitting ? (
                 <>
@@ -131,14 +114,14 @@ export default function LoginPage() {
           </div>
         </form>
         
-        {/* Información de credenciales para desarrollo 
+        {/* Información de credenciales para desarrollo */}
         {process.env.NODE_ENV === 'development' && (
           <div className="mt-4 p-4 bg-yellow-50 text-yellow-800 text-sm rounded-md">
             <p className="font-semibold">Credenciales para desarrollo:</p>
             <p>Usuario: <span className="font-mono">admin</span></p>
             <p>Contraseña: <span className="font-mono">admin123</span></p>
           </div>
-        )}*/}
+        )}
       </div>
     </div>
   );

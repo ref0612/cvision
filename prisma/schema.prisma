@@ -13,7 +13,19 @@ datasource db {
   // extensions = [pgcrypto, uuid_ossp]
 }
 
-// Configuración de modelos existente...
+// Modelo de usuario para autenticación
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String   // En producción, esto debería estar hasheado
+  email     String?  @unique
+  role      String   @default("user")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
 
 // Modelo para el inventario
 model InventoryItem {
