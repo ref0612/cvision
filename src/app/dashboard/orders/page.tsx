@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, PlusCircle, Edit2, Trash2, PackagePlus, PackageMinus, CheckCircle2 } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Edit2, Trash2, PackagePlus, PackageMinus, CheckCircle2, FileText } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, startOfMonth, endOfMonth, addMonths } from "date-fns";
@@ -20,43 +20,11 @@ import { useToast } from "@/hooks/use-toast";
 import type { DateRange } from 'react-day-picker';
 import { formatCurrencyCLP } from '@/lib/utils';
 
-// Recalculate netUnitPrice based on unitPriceWithVat for initial data
-const initialOrderItems = (items: Omit<OrderItem, 'netUnitPrice'>[]): OrderItem[] => {
-  return items.map(item => ({
-    ...item,
-    unitPriceWithVat: Math.round(item.unitPriceWithVat),
-    netUnitPrice: Math.round(item.unitPriceWithVat / (1 + VAT_RATE)),
-  }));
-};
-
-const initialOrdersRaw = [
-  {
-    id: 'order1',
-    orderDate: new Date(2024, 6, 20),
-    customerName: 'Cliente Ejemplo 1',
-    items: [
-      { id: 'item1-1', productName: 'Producto Alpha', quantity: 2, unitPriceWithVat: 50000 },
-      { id: 'item1-2', productName: 'Servicio Beta', quantity: 1, unitPriceWithVat: 119000 },
-    ],
-    status: 'Recibido' as OrderStatus,
-    description: 'Pedido de prueba inicial',
-  },
-   {
-    id: 'order2',
-    orderDate: new Date(2024, 0, 15), // Older order
-    customerName: 'Cliente Antiguo',
-    items: [
-      { id: 'item2-1', productName: 'Producto Gamma', quantity: 5, unitPriceWithVat: 20000 },
-    ],
-    status: 'Completado' as OrderStatus,
-  },
-];
-
 // Calculate order totals based on items where netUnitPrice is already calculated
 const calculateOrderTotals = (items: OrderItem[]): Pick<Order, 'totalNetAmount' | 'totalIvaAmount' | 'totalAmount'> => {
   const totalNetAmount = items.reduce((sum, item) => sum + (item.quantity * item.netUnitPrice), 0);
-  const totalAmount = items.reduce((sum,item) => sum + (item.quantity * item.unitPriceWithVat), 0); // This is the total with VAT
-  const totalIvaAmount = Math.round(totalAmount - totalNetAmount); // IVA is difference between total with VAT and total net
+  const totalAmount = items.reduce((sum,item) => sum + (item.quantity * item.unitPriceWithVat), 0);
+  const totalIvaAmount = Math.round(totalAmount - totalNetAmount);
 
   return { 
     totalNetAmount: Math.round(totalNetAmount), 
@@ -65,22 +33,16 @@ const calculateOrderTotals = (items: OrderItem[]): Pick<Order, 'totalNetAmount' 
   };
 };
 
-
 export default function OrdersPage() {
   const { toast } = useToast();
-  const [orders, setOrders] = useState<Order[]>(() => 
-    initialOrdersRaw.map(order => ({
-        ...order, 
-        items: initialOrderItems(order.items), 
-        ...calculateOrderTotals(initialOrderItems(order.items))
-    })).sort((a,b) => b.orderDate.getTime() - a.orderDate.getTime())
-  );
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const defaultNewOrder: Partial<Order> = { 
     orderDate: new Date(), 
     items: [], 
-    status: 'Recibido',
+    status: 'RECIBIDO',
     totalNetAmount: 0,
     totalIvaAmount: 0,
     totalAmount: 0,
@@ -95,6 +57,32 @@ export default function OrdersPage() {
     from: defaultDateRangeFrom,
     to: defaultDateRangeTo,
   });
+
+  // Cargar pedidos desde la API
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const response = await fetch('/api/orders');
+      if (response.ok) {
+        const data = await response.json();
+        // Convertir fechas de string a Date
+        const ordersWithDates = data.map((order: any) => ({
+          ...order,
+          orderDate: new Date(order.orderDate),
+        }));
+        setOrders(ordersWithDates);
+      } else {
+        toast({ title: "Error", description: "No se pudieron cargar los pedidos.", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Error al cargar los pedidos.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredOrders = useMemo(() => {
     if (!dateRange?.from) return orders;
@@ -137,7 +125,7 @@ export default function OrdersPage() {
     const newItem: OrderItem = {
       id: crypto.randomUUID(),
       productName: newItemProductName,
-      quantity: newItemQuantity, // Quantity can have decimals
+      quantity: newItemQuantity,
       unitPriceWithVat: roundedUnitPriceWithVat,
       netUnitPrice: calculatedNetUnitPrice,
     };
@@ -151,7 +139,7 @@ export default function OrdersPage() {
     setCurrentOrder(prev => ({ ...prev, items: prev.items?.filter(item => item.id !== itemId) }));
   };
   
-  const handleSaveOrder = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveOrder = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
@@ -162,23 +150,50 @@ export default function OrdersPage() {
 
     const totals = calculateOrderTotals(currentOrder.items);
 
-    const orderData: Order = {
-      id: editingId || crypto.randomUUID(),
-      orderDate: currentOrder.orderDate || new Date(), 
+    const orderData = {
       customerName: formData.get('customerName') as string || undefined,
+      rut: formData.get('rut') as string || undefined,
+      telefono: formData.get('telefono') as string || undefined,
       items: currentOrder.items,
-      ...totals,
+      totalAmount: totals.totalAmount,
+      totalNetAmount: totals.totalNetAmount,
+      totalIvaAmount: totals.totalIvaAmount,
       status: currentOrder.status || 'Recibido',
       description: formData.get('description') as string || undefined,
     };
 
-    if (editingId) {
-      setOrders(orders.map(o => o.id === editingId ? orderData : o).sort((a,b) => b.orderDate.getTime() - a.orderDate.getTime()));
-      toast({ title: "Pedido Actualizado", description: `El pedido #${orderData.id.substring(0,8)}... ha sido actualizado.` });
-    } else {
-      setOrders([...orders, orderData].sort((a,b) => b.orderDate.getTime() - a.orderDate.getTime()));
-      toast({ title: "Pedido Creado", description: `Nuevo pedido #${orderData.id.substring(0,8)}... creado.` });
+    try {
+      if (editingId) {
+        // Actualizar pedido existente
+        const response = await fetch(`/api/orders/${editingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData),
+        });
+        if (response.ok) {
+          await fetchOrders(); // Recargar datos
+          toast({ title: "Pedido Actualizado", description: `El pedido #${editingId.substring(0,8)}... ha sido actualizado.` });
+        } else {
+          toast({ title: "Error", description: "No se pudo actualizar el pedido.", variant: "destructive" });
+        }
+      } else {
+        // Crear nuevo pedido
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData),
+        });
+        if (response.ok) {
+          await fetchOrders(); // Recargar datos
+          toast({ title: "Pedido Creado", description: "Nuevo pedido creado exitosamente." });
+        } else {
+          toast({ title: "Error", description: "No se pudo crear el pedido.", variant: "destructive" });
+        }
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Error al guardar el pedido.", variant: "destructive" });
     }
+
     setIsDialogOpen(false);
     setCurrentOrder(defaultNewOrder);
     setEditingId(null);
@@ -190,16 +205,34 @@ export default function OrdersPage() {
     setIsDialogOpen(true);
   };
 
-  const handleDeleteOrder = (id: string) => {
-    setOrders(orders.filter(o => o.id !== id));
-    toast({ title: "Pedido Eliminado", description: `El pedido #${id.substring(0,8)}... ha sido eliminado.` });
+  const handleDeleteOrder = async (id: string) => {
+    try {
+      const response = await fetch(`/api/orders/${id}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        await fetchOrders(); // Recargar datos
+        toast({ title: "Pedido Eliminado", description: `El pedido #${id.substring(0,8)}... ha sido eliminado.` });
+      } else {
+        toast({ title: "Error", description: "No se pudo eliminar el pedido.", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Error al eliminar el pedido.", variant: "destructive" });
+    }
   };
 
-  const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
-    setOrders(prevOrders => prevOrders.map(order => {
-      if (order.id === orderId) {
-        const updatedOrder = { ...order, status: newStatus };
-        if (newStatus === 'Completado' && order.status !== 'Completado') {
+  const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
+    try {
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      
+      if (response.ok) {
+        await fetchOrders(); // Recargar datos
+        const order = orders.find(o => o.id === orderId);
+        if (newStatus === 'COMPLETADO' && order && order.status !== 'COMPLETADO') {
           toast({
             title: "Pedido Completado",
             description: (
@@ -211,16 +244,34 @@ export default function OrdersPage() {
             ),
             action: <CheckCircle2 className="text-green-500" />,
           });
+        } else if (newStatus === 'ANULADO' && order && order.status === 'COTIZACION_ENVIADA') {
+          toast({
+            title: "Cotización Anulada",
+            description: "El stock bloqueado ha sido liberado.",
+          });
         }
-        return updatedOrder;
+      } else {
+        toast({ title: "Error", description: "No se pudo actualizar el estado del pedido.", variant: "destructive" });
       }
-      return order;
-    }));
+    } catch (error) {
+      toast({ title: "Error", description: "Error al actualizar el estado del pedido.", variant: "destructive" });
+    }
   };
   
-  const totalNetSales = useMemo(() => filteredOrders.filter(o => o.status === 'Completado').reduce((sum, o) => sum + o.totalNetAmount, 0), [filteredOrders]);
-  const totalIvaSales = useMemo(() => filteredOrders.filter(o => o.status === 'Completado').reduce((sum, o) => sum + o.totalIvaAmount, 0), [filteredOrders]);
-  const totalSales = useMemo(() => filteredOrders.filter(o => o.status === 'Completado').reduce((sum, o) => sum + o.totalAmount, 0), [filteredOrders]);
+  const totalNetSales = useMemo(() => filteredOrders.filter(o => o.status === 'COMPLETADO').reduce((sum, o) => sum + o.totalNetAmount, 0), [filteredOrders]);
+  const totalIvaSales = useMemo(() => filteredOrders.filter(o => o.status === 'COMPLETADO').reduce((sum, o) => sum + o.totalIvaAmount, 0), [filteredOrders]);
+  const totalSales = useMemo(() => filteredOrders.filter(o => o.status === 'COMPLETADO').reduce((sum, o) => sum + o.totalAmount, 0), [filteredOrders]);
+
+  if (isLoading) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Cargando pedidos...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen flex flex-col gap-4 bg-background">
@@ -261,6 +312,7 @@ export default function OrdersPage() {
               />
             </PopoverContent>
           </Popover>
+          
           <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
             setIsDialogOpen(isOpen);
             if (!isOpen) {
@@ -283,7 +335,7 @@ export default function OrdersPage() {
                   Define los detalles del pedido. Ingresa precios unitarios con IVA (en CLP). El neto y los totales se calcularán.
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleSaveOrder} className="space-y-4">
+              <form onSubmit={handleSaveOrder}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="orderDate">Fecha del Pedido</Label>
@@ -303,9 +355,17 @@ export default function OrdersPage() {
                     <Label htmlFor="customerName">Nombre del Cliente (Opcional)</Label>
                     <Input id="customerName" name="customerName" defaultValue={currentOrder.customerName} />
                   </div>
+                  <div>
+                    <Label htmlFor="rut">RUT (Opcional)</Label>
+                    <Input id="rut" name="rut" defaultValue={currentOrder.rut} />
+                  </div>
+                  <div>
+                    <Label htmlFor="telefono">Teléfono (Opcional)</Label>
+                    <Input id="telefono" name="telefono" defaultValue={currentOrder.telefono} />
+                  </div>
                 </div>
                 
-                <Card>
+                <Card className="mt-4">
                   <CardHeader>
                     <CardTitle className="text-lg">Artículos del Pedido</CardTitle>
                   </CardHeader>
@@ -329,7 +389,8 @@ export default function OrdersPage() {
                     {(!currentOrder.items || currentOrder.items.length === 0) && (
                       <p className="text-sm text-muted-foreground">No hay artículos en el pedido.</p>
                     )}
-                    <div className="mt-4 p-3 border rounded-md space-y-2">
+                    
+                    <div className="border-t pt-4">
                       <h4 className="text-md font-semibold">Añadir Nuevo Artículo</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
                           <div>
@@ -350,10 +411,10 @@ export default function OrdersPage() {
                         </Button>
                     </div>
                   </CardContent>
-                   <CardFooter className="text-right space-y-1">
-                      <p>Subtotal Neto (sin IVA): {formatCurrencyCLP(currentOrder.totalNetAmount)}</p>
-                      <p>IVA ({VAT_RATE*100}%): {formatCurrencyCLP(currentOrder.totalIvaAmount)}</p>
-                      <p className="font-bold">Total Pedido (con IVA): {formatCurrencyCLP(currentOrder.totalAmount)}</p>
+                   <CardFooter className="flex flex-col items-end space-y-2">
+                      <p>Subtotal Neto (sin IVA): {formatCurrencyCLP(currentOrder.totalNetAmount || 0)}</p>
+                      <p>IVA ({VAT_RATE*100}%): {formatCurrencyCLP(currentOrder.totalIvaAmount || 0)}</p>
+                      <p className="font-bold">Total Pedido (con IVA): {formatCurrencyCLP(currentOrder.totalAmount || 0)}</p>
                    </CardFooter>
                 </Card>
 
@@ -388,19 +449,21 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <Card className="w-full">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Lista de Pedidos</CardTitle>
-          <CardDescription>Pedidos registrados para el período seleccionado.</CardDescription>
+          <CardTitle className="text-lg font-semibold">Lista de Pedidos y Cotizaciones</CardTitle>
+          <CardDescription>Pedidos y cotizaciones registrados para el período seleccionado.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <Table className="w-full min-w-[900px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID Pedido</TableHead>
+                  <TableHead>ID</TableHead>
                   <TableHead>Fecha</TableHead>
                   <TableHead>Cliente</TableHead>
+                  <TableHead>RUT</TableHead>
+                  <TableHead>Teléfono</TableHead>
                   <TableHead className="text-right">Total (c/IVA)</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
@@ -409,9 +472,16 @@ export default function OrdersPage() {
               <TableBody>
                 {filteredOrders.length > 0 ? filteredOrders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell className="font-medium text-xs">{order.id.substring(0,8)}...</TableCell>
+                    <TableCell className="font-medium text-xs">
+                      <div className="flex items-center gap-1">
+                        {order.status === 'COTIZACION_ENVIADA' && <FileText className="h-3 w-3 text-blue-500" />}
+                        {order.id.substring(0,8)}...
+                      </div>
+                    </TableCell>
                     <TableCell>{format(order.orderDate, "dd/MM/yyyy", { locale: es })}</TableCell>
                     <TableCell>{order.customerName || '-'}</TableCell>
+                    <TableCell>{order.rut || '-'}</TableCell>
+                    <TableCell>{order.telefono || '-'}</TableCell>
                     <TableCell className="text-right font-medium">{formatCurrencyCLP(order.totalAmount)}</TableCell>
                     <TableCell>
                        <Select value={order.status} onValueChange={(newStatus) => handleStatusChange(order.id, newStatus as OrderStatus)}>
@@ -436,7 +506,7 @@ export default function OrdersPage() {
                   </TableRow>
                 )) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center h-24">
+                    <TableCell colSpan={8} className="text-center h-24">
                       No hay pedidos registrados para el rango de fechas seleccionado.
                     </TableCell>
                   </TableRow>

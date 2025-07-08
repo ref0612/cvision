@@ -60,14 +60,16 @@ export interface OrderItem {
   netUnitPrice: number;     // Calculated price per unit BEFORE IVA
 }
 
-export type OrderStatus = 'Recibido' | 'Elaborado' | 'Completado' | 'Anulado';
+export type OrderStatus = 'COTIZACION_ENVIADA' | 'RECIBIDO' | 'ELABORADO' | 'COMPLETADO' | 'ANULADO';
 
-export const ORDER_STATUSES: OrderStatus[] = ['Recibido', 'Elaborado', 'Completado', 'Anulado'];
+export const ORDER_STATUSES: OrderStatus[] = ['COTIZACION_ENVIADA', 'RECIBIDO', 'ELABORADO', 'COMPLETADO', 'ANULADO'];
 
 export interface Order {
   id: string;
   orderDate: Date;
   customerName?: string;
+  rut?: string;
+  telefono?: string;
   items: OrderItem[];
   totalAmount: number;    // Calculated (sum of item.quantity * item.unitPriceWithVat) - effectively, this is the grand total with VAT
   totalNetAmount: number; // Calculated sum of (item.quantity * item.netUnitPrice)

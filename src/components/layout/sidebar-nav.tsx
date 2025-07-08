@@ -9,8 +9,10 @@ import {
   CreditCard,
   Archive,
   BarChartBig,
-  Sparkles,
   ShoppingBag,
+  Settings,
+  FileText, // Ícono para Cotizaciones
+  History, // Ícono para Historial
 } from 'lucide-react';
 
 const navItems = [
@@ -20,7 +22,9 @@ const navItems = [
   { href: '/dashboard/inventory', label: 'Inventario', icon: Archive },
   { href: '/dashboard/orders', label: 'Pedidos', icon: ShoppingBag },
   { href: '/dashboard/cost-analysis', label: 'Análisis de Costos', icon: BarChartBig },
-  { href: '/dashboard/ai-suggestions', label: 'Sugerencias IA', icon: Sparkles },
+  { href: '/dashboard/quotations', label: 'Cotizaciones', icon: FileText },
+  { href: '/dashboard/quotations-history', label: 'Historial de Cotizaciones', icon: History },
+  { href: '/dashboard/company-settings', label: 'Configuración de Empresa', icon: Settings },
 ];
 
 export default function SidebarNav() {

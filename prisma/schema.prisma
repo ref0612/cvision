@@ -100,3 +100,46 @@ model ProductComponent {
 //   @@map("inventory_items")
 // }
 
+model CompanySettings {
+  id        Int     @id @default(1)
+  nombre    String
+  rut       String
+  telefono  String
+  correo    String
+  direccion String
+  logoUrl   String?
+}
+
+model Order {
+  id             String        @id @default(uuid())
+  orderDate      DateTime      @default(now())
+  customerName   String?
+  rut            String?
+  telefono       String?
+  status         OrderStatus   @default(COTIZACION_ENVIADA)
+  description    String?
+  items          OrderItem[]
+  totalAmount    Float         // Total con IVA
+  totalNetAmount Float         // Neto sin IVA
+  totalIvaAmount Float         // IVA
+}
+
+enum OrderStatus {
+  COTIZACION_ENVIADA
+  RECIBIDO
+  ELABORADO
+  COMPLETADO
+  ANULADO
+}
+
+model OrderItem {
+  id           String   @id @default(uuid())
+  order        Order    @relation(fields: [orderId], references: [id])
+  orderId      String
+  productId    String?  // Relación opcional a inventario
+  productName  String
+  quantity     Int
+  unitPriceWithVat Float
+  netUnitPrice     Float
+}
+
