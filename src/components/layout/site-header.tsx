@@ -11,17 +11,9 @@ interface SiteHeaderProps {
 export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
   const { logout } = useAuth(); // Obtener logout del AuthProvider
 
-  // Ya no necesitamos handleLogout local, usamos el del AuthProvider
-  // const handleLogout = () => {
-  //   // Eliminar cookie de sesión
-  //   document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-  //   // Redirigir a la página de login
-  //   window.location.href = '/login';
-  // };
-
   return (
-    <header className="sticky top-0 z-30 w-full border-b bg-background">
-      <div className="container flex h-16 items-center justify-between px-4 md:px-6">
+    <header className="fixed top-0 left-0 w-full z-20 bg-sidebar md:pl-64 min-h-[5.5rem] flex items-center shadow-sm transition-all duration-200">
+      <div className="flex flex-1 h-full items-center justify-between px-4 md:px-6">
         <div className="flex items-center space-x-4">
           <Button 
             variant="ghost" 
@@ -33,14 +25,14 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
             <span className="sr-only">Toggle menu</span>
           </Button>
           <div className="flex items-center space-x-2">
-            <span className="text-lg font-bold text-primary">ContableVision</span>
+            <span className="font-creative text-[1.5rem]">Tu Guarida Creativa</span>
           </div>
         </div>
         <div className="flex items-center space-x-4">
           <Button 
             variant="outline" 
-            onClick={logout} // Usar la función logout del AuthProvider
-            className="bg-background hover:bg-accent hover:text-accent-foreground"
+            onClick={() => logout()} // Usar la función logout del AuthProvider
+            className="bg-sidebar hover:bg-accent hover:text-accent-foreground border-none"
           >
             Cerrar Sesión
           </Button>

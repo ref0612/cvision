@@ -348,151 +348,15 @@ export default function CostAnalysisPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-headline font-semibold">Análisis de Costos de Productos Vendibles</h1>
-        <Dialog open={isProductDialogOpen} onOpenChange={(isOpen) => {
-          setIsProductDialogOpen(isOpen);
-          if (!isOpen) {
-            setCurrentProduct(defaultNewProduct);
-            setEditingProductId(null);
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { setCurrentProduct(defaultNewProduct); setEditingProductId(null); setIsProductDialogOpen(true); }}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Crear Producto Vendible
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingProductId ? 'Editar' : 'Crear Nuevo'} Producto Vendible</DialogTitle>
-              <DialogDescription>
-                Define tu producto, sus componentes/costos y el margen de ganancia deseado. Los precios se mostrarán en CLP.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSaveProduct} className="space-y-4 mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="productName">Nombre del Producto Vendible</Label>
-                  <Input id="productName" name="productName" value={currentProduct.name || ''} 
-                         onChange={(e) => setCurrentProduct(prev => ({...prev, name: e.target.value}))}
-                         required />
-                </div>
-                <div>
-                  <Label htmlFor="desiredProfitMargin">Margen de Ganancia Deseado (%)</Label>
-                  <Input id="desiredProfitMargin" name="desiredProfitMargin" type="number" step="0.1" 
-                         value={currentProduct.desiredProfitMargin ?? ''} 
-                         onChange={handleMarginChange}
-                         placeholder="Ej: 30 para 30%"
-                         min="0"
-                         required />
-                  <p className="text-xs text-muted-foreground mt-1">Margen sobre el precio de venta neto (antes de IVA).</p>       
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="productDescription">Descripción (Opcional)</Label>
-                <Textarea id="productDescription" name="productDescription" value={currentProduct.description || ''}
-                          onChange={(e) => setCurrentProduct(prev => ({...prev, description: e.target.value}))} />
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Componentes y Costos del Producto</CardTitle>
-                   <CardDescription>Añade componentes de inventario o ingresa costos manualmente.</CardDescription>
-                  <Button type="button" size="sm" variant="outline" onClick={handleAddComponent} className="mt-2">
-                    <PackagePlus className="mr-2 h-4 w-4" /> Añadir Componente/Costo
-                  </Button>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {currentProduct.components?.map((component, index) => (
-                    <div key={index} className="p-3 border rounded-md space-y-2">
-                      <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr_1fr_1fr_auto] gap-2 items-end">
-                        <div>
-                            <Label htmlFor={`componentType-${index}`}>Fuente</Label>
-                            <Select
-                                value={component.inventoryItemId || 'MANUAL_ENTRY'}
-                                onValueChange={(value) => handleComponentChange(index, 'inventoryItemSelection', value)}
-                            >
-                                <SelectTrigger id={`componentType-${index}`}>
-                                    <SelectValue placeholder="Selecciona fuente"/>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="MANUAL_ENTRY">Ingresar Manualmente</SelectItem>
-                                    {inventoryItems.map((item: InventoryItem) => (
-                                    <SelectItem key={item.id} value={item.id}>
-                                        {item.name} (Inventario)
-                                    </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label htmlFor={`componentName-${index}`}>Nombre Componente/Costo</Label>
-                            <Input
-                            id={`componentName-${index}`}
-                            value={component.itemName}
-                            onChange={(e) => handleComponentChange(index, 'itemName', e.target.value)}
-                            readOnly={!!component.inventoryItemId && component.inventoryItemId !== 'MANUAL_ENTRY'}
-                            required
-                            />
-                        </div>
-                        <div className="w-full md:w-28">
-                            <Label htmlFor={`componentPurchasePrice-${index}`}>Costo Unit. (CLP)</Label>
-                            <Input
-                            id={`componentPurchasePrice-${index}`}
-                            type="number"
-                            step="1"
-                            value={component.purchasePriceAtTimeOfAssembly ?? 0}
-                            onChange={(e) => handleComponentChange(index, 'purchasePriceAtTimeOfAssembly', parseFloat(e.target.value))}
-                            readOnly={!!component.inventoryItemId && component.inventoryItemId !== 'MANUAL_ENTRY'}
-                            required
-                            />
-                        </div>
-                        <div className="w-full md:w-24">
-                            <Label htmlFor={`componentQty-${index}`}>Cantidad</Label>
-                            <Input
-                            id={`componentQty-${index}`}
-                            type="number"
-                            value={component.quantity}
-                            onChange={(e) => handleComponentChange(index, 'quantity', parseFloat(e.target.value))}
-                            min="0" step="any" // Allow decimal for quantity
-                            required
-                            />
-                        </div>
-                        <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveComponent(index)} aria-label="Eliminar componente">
-                            <PackageMinus className="h-5 w-5 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  {(!currentProduct.components || currentProduct.components.length === 0) && (
-                    <p className="text-sm text-muted-foreground p-2">Aún no has añadido componentes o costos.</p>
-                  )}
-                </CardContent>
-              </Card>
-              
-              <Card className="mt-4 bg-muted/30">
-                <CardHeader>
-                    <CardTitle className="text-lg flex items-center"><Coins className="mr-2 h-5 w-5 text-primary"/>Resumen de Precios Calculados (CLP)</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span>Costo Total de Componentes/Costos:</span> <span className="font-semibold">{formatCurrencyCLP(currentProduct.totalComponentCost)}</span></div>
-                    <div className="flex justify-between"><span>Precio de Venta Neto (sin IVA):</span> <span className="font-semibold">{formatCurrencyCLP(currentProduct.netSalePriceWithoutIVA)}</span></div>
-                    <div className="flex justify-between"><span>IVA ({VAT_RATE*100}%):</span> <span className="font-semibold">{formatCurrencyCLP(currentProduct.ivaAmountOnSale)}</span></div>
-                    <div className="flex justify-between font-bold text-base"><span>Precio de Venta Final (con IVA):</span> <span>{formatCurrencyCLP(currentProduct.finalSalePriceWithIVA)}</span></div>
-                </CardContent>
-              </Card>
-
-              <DialogFooter className="pt-4">
-                <Button type="button" variant="outline" onClick={() => setIsProductDialogOpen(false)}>Cancelar</Button>
-                <Button type="submit">{editingProductId ? 'Actualizar' : 'Guardar'} Producto</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+    <div className="w-full min-h-screen flex flex-col gap-4 bg-background">
+      <div className="flex items-center justify-between px-2">
+        <h1 className="text-3xl font-bold">Análisis de Costos de Productos Vendibles</h1>
+        <Button onClick={() => setIsProductDialogOpen(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" /> Crear Producto Vendible
+        </Button>
       </div>
-
-      <Card>
+      {/* KPIs o widgets si aplica, grid fluido aquí */}
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Lista de Productos Vendibles</CardTitle>
           <CardDescription>Productos definidos con sus costos y precios calculados según margen (en CLP).</CardDescription>

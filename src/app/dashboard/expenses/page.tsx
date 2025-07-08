@@ -97,8 +97,8 @@ export default function ExpensesPage() {
   }, [filteredExpenseRecords]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div className="w-full min-h-screen flex flex-col gap-4 bg-background">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-2">
         <h1 className="text-3xl font-headline font-semibold">Registro de Egresos</h1>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Popover>
@@ -215,49 +215,49 @@ export default function ExpensesPage() {
         </div>
       </div>
 
-      <Card>
+      <Card className="w-full">
         <CardHeader>
-          <CardTitle>Lista de Egresos</CardTitle>
-          <CardDescription>
-             Egresos registrados para el período: {dateRange?.from ? format(dateRange.from, "P", { locale: es }) : 'N/A'} - {dateRange?.to ? format(dateRange.to, "P", { locale: es }) : 'N/A'}.
-          </CardDescription>
+          <CardTitle className="text-lg font-semibold">Lista de Egresos</CardTitle>
+          <CardDescription>Egresos registrados para el período seleccionado.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Categoría</TableHead>
-                <TableHead className="text-right">Monto</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredExpenseRecords.length > 0 ? filteredExpenseRecords.map((record) => (
-                <TableRow key={record.id}>
-                  <TableCell>{format(record.date, "dd/MM/yyyy", { locale: es })}</TableCell>
-                  <TableCell>{record.category}</TableCell>
-                  <TableCell className="text-right font-medium">{formatCurrencyCLP(record.amount)}</TableCell>
-                  <TableCell>{record.description || '-'}</TableCell>
-                  <TableCell className="text-right space-x-2">
-                     <Button variant="ghost" size="icon" onClick={() => handleEdit(record)}>
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(record.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table className="w-full min-w-[900px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Categoría</TableHead>
+                  <TableHead className="text-right">Monto</TableHead>
+                  <TableHead>Descripción</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
-              )) : (
-                 <TableRow>
-                  <TableCell colSpan={5} className="text-center h-24">
-                    No hay egresos registrados para el rango de fechas seleccionado.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredExpenseRecords.length > 0 ? filteredExpenseRecords.map((record) => (
+                  <TableRow key={record.id}>
+                    <TableCell>{format(record.date, "dd/MM/yyyy", { locale: es })}</TableCell>
+                    <TableCell>{record.category}</TableCell>
+                    <TableCell className="text-right font-medium">{formatCurrencyCLP(record.amount)}</TableCell>
+                    <TableCell>{record.description || '-'}</TableCell>
+                    <TableCell className="text-right space-x-2">
+                       <Button variant="ghost" size="icon" onClick={() => handleEdit(record)}>
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(record.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )) : (
+                   <TableRow>
+                    <TableCell colSpan={5} className="text-center h-24">
+                      No hay egresos registrados para el rango de fechas seleccionado.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
         <CardFooter className="flex justify-end font-semibold">
             Total Egresos: {formatCurrencyCLP(totalExpenses)}

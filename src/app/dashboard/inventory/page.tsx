@@ -149,20 +149,18 @@ export default function InventoryPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64 w-full min-h-screen bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="w-full min-h-screen flex flex-col gap-4 bg-background">
+      <div className="flex items-center justify-between px-2">
         <h1 className="text-3xl font-bold">Inventario</h1>
-        
       </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Artículos Totales</CardTitle>
@@ -196,8 +194,7 @@ export default function InventoryPage() {
           Agregar Artículo
         </Button>
       </div>
-
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>

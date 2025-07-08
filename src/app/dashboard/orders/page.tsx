@@ -223,8 +223,8 @@ export default function OrdersPage() {
   const totalSales = useMemo(() => filteredOrders.filter(o => o.status === 'Completado').reduce((sum, o) => sum + o.totalAmount, 0), [filteredOrders]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div className="w-full min-h-screen flex flex-col gap-4 bg-background">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-2">
         <h1 className="text-3xl font-headline font-semibold">Gestión de Pedidos</h1>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Popover>
@@ -388,62 +388,62 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <Card>
+      <Card className="w-full">
         <CardHeader>
-          <CardTitle>Lista de Pedidos</CardTitle>
-           <CardDescription>
-             Pedidos registrados para el período: {dateRange?.from ? format(dateRange.from, "P", { locale: es }) : 'N/A'} - {dateRange?.to ? format(dateRange.to, "P", { locale: es }) : 'N/A'}.
-          </CardDescription>
+          <CardTitle className="text-lg font-semibold">Lista de Pedidos</CardTitle>
+          <CardDescription>Pedidos registrados para el período seleccionado.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID Pedido</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead className="text-right">Total (c/IVA)</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOrders.length > 0 ? filteredOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium text-xs">{order.id.substring(0,8)}...</TableCell>
-                  <TableCell>{format(order.orderDate, "dd/MM/yyyy", { locale: es })}</TableCell>
-                  <TableCell>{order.customerName || '-'}</TableCell>
-                  <TableCell className="text-right font-medium">{formatCurrencyCLP(order.totalAmount)}</TableCell>
-                  <TableCell>
-                     <Select value={order.status} onValueChange={(newStatus) => handleStatusChange(order.id, newStatus as OrderStatus)}>
-                        <SelectTrigger className="h-8 text-xs w-[130px]">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {ORDER_STATUSES.map(stat => (
-                            <SelectItem key={stat} value={stat} className="text-xs">{stat}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell className="text-right space-x-1">
-                    <Button variant="ghost" size="icon" onClick={() => handleEditOrder(order)}>
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteOrder(order.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              )) : (
+          <div className="overflow-x-auto">
+            <Table className="w-full min-w-[900px]">
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center h-24">
-                    No hay pedidos registrados para el rango de fechas seleccionado.
-                  </TableCell>
+                  <TableHead>ID Pedido</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead className="text-right">Total (c/IVA)</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredOrders.length > 0 ? filteredOrders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium text-xs">{order.id.substring(0,8)}...</TableCell>
+                    <TableCell>{format(order.orderDate, "dd/MM/yyyy", { locale: es })}</TableCell>
+                    <TableCell>{order.customerName || '-'}</TableCell>
+                    <TableCell className="text-right font-medium">{formatCurrencyCLP(order.totalAmount)}</TableCell>
+                    <TableCell>
+                       <Select value={order.status} onValueChange={(newStatus) => handleStatusChange(order.id, newStatus as OrderStatus)}>
+                          <SelectTrigger className="h-8 text-xs w-[130px]">
+                              <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                              {ORDER_STATUSES.map(stat => (
+                              <SelectItem key={stat} value={stat} className="text-xs">{stat}</SelectItem>
+                              ))}
+                          </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button variant="ghost" size="icon" onClick={() => handleEditOrder(order)}>
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDeleteOrder(order.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center h-24">
+                      No hay pedidos registrados para el rango de fechas seleccionado.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
         <CardFooter className="grid grid-cols-1 md:grid-cols-3 gap-4 text-right font-semibold text-sm">
             <div>Ventas (Neto): {formatCurrencyCLP(totalNetSales)}</div>

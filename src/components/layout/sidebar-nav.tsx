@@ -27,41 +27,41 @@ export default function SidebarNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="space-y-1">
-      {navItems.map((item) => {
-        // Para el dashboard, coincidir exactamente con /dashboard
-        if (item.href === '/dashboard') {
-          var isActive = pathname === item.href;
-        } 
-        // Para otras rutas, verificar si la ruta actual comienza con el href
-        else {
-          isActive = pathname.startsWith(item.href) || 
-                   (pathname + '/').startsWith(item.href + '/');
-        }
-        
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              'flex items-center px-4 py-3 text-sm font-medium rounded-md transition-colors',
-              isActive 
-                ? 'bg-primary/10 text-primary' 
-                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-              'group'
-            )}
-          >
-            <item.icon 
+    <aside className="sidebar">
+      <nav className="space-y-1">
+        {navItems.map((item) => {
+          // Para el dashboard, coincidir exactamente con /dashboard
+          if (item.href === '/dashboard') {
+            var isActive = pathname === item.href;
+          } 
+          // Para otras rutas, verificar si la ruta actual comienza con el href
+          else {
+            isActive = pathname.startsWith(item.href) || 
+                     (pathname + '/').startsWith(item.href + '/');
+          }
+          
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
               className={cn(
-                'mr-3 h-5 w-5 flex-shrink-0',
-                isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-accent-foreground'
-              )} 
-              aria-hidden="true" 
-            />
-            <span>{item.label}</span>
-          </Link>
-        );
-      })}
-    </nav>
+                'sidebar-item',
+                isActive && 'sidebar-item-active',
+                'group'
+              )}
+            >
+              <item.icon 
+                className={cn(
+                  'mr-3 h-5 w-5 flex-shrink-0 transition-colors duration-200',
+                  isActive ? 'text-sidebar-primary' : 'text-muted-foreground group-hover:text-sidebar-accent-foreground'
+                )} 
+                aria-hidden="true" 
+              />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    </aside>
   );
 }

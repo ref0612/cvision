@@ -37,6 +37,11 @@ export const config = {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
+  // Log de cookies recibidas
+  console.log('--- Middleware ---');
+  console.log('Pathname:', pathname);
+  console.log('Cookies recibidas:', request.cookies.getAll());
+  
   // 1. Permitir todas las solicitudes a rutas públicas
   const isPublicPath = publicPaths.some(path => 
     pathname === path || pathname.startsWith(`${path}/`)
@@ -54,12 +59,15 @@ export async function middleware(request: NextRequest) {
   
   if (!isProtectedPath) {
     // Si no es una ruta protegida, permitir acceso
+    console.log('Ruta no protegida, acceso permitido:', pathname);
     return NextResponse.next();
   }
   
   // 3. Para rutas protegidas, verificar la cookie de sesión
   const sessionCookie = request.cookies.get('session');
   const isAuthenticated = sessionCookie && sessionCookie.value === 'true';
+  console.log('sessionCookie:', sessionCookie);
+  console.log('isAuthenticated:', isAuthenticated);
   
   if (!isAuthenticated) {
     console.log('Usuario no autenticado, redirigiendo a login desde:', pathname);

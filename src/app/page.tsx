@@ -1,19 +1,27 @@
 'use client';
 
+import { useAuth } from '@/providers/auth-provider';
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 export default function HomePage() {
-  const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    // Redirect to dashboard
-    router.push('/dashboard');
-  }, [router]);
+    if (isAuthenticated === true) {
+      window.location.href = '/dashboard';
+    } else if (isAuthenticated === false) {
+      window.location.href = '/login';
+    }
+  }, [isAuthenticated]);
 
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-    </div>
-  );
+  if (isAuthenticated === null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return null;
 }

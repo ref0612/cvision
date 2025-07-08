@@ -125,8 +125,8 @@ export default function IncomePage() {
 
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div className="w-full min-h-screen flex flex-col gap-4 bg-background">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-2">
         <h1 className="text-3xl font-headline font-semibold">Registro de Ingresos</h1>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Popover>
@@ -228,53 +228,53 @@ export default function IncomePage() {
           </div>
       </div>
 
-      <Card>
+      <Card className="w-full">
         <CardHeader>
-          <CardTitle>Lista de Ingresos</CardTitle>
-          <CardDescription>
-            Ingresos registrados para el período: {dateRange?.from ? format(dateRange.from, "P", { locale: es }) : 'N/A'} - {dateRange?.to ? format(dateRange.to, "P", { locale: es }) : 'N/A'}.
-          </CardDescription>
+          <CardTitle className="text-lg font-semibold">Lista de Ingresos</CardTitle>
+          <CardDescription>Ingresos registrados para el período seleccionado.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Fuente</TableHead>
-                <TableHead className="text-right">Monto Neto (sin IVA)</TableHead>
-                <TableHead className="text-right">IVA ({VAT_RATE * 100}%)</TableHead>
-                <TableHead className="text-right">Monto Total (con IVA)</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredIncomeRecords.length > 0 ? filteredIncomeRecords.map((record) => (
-                <TableRow key={record.id}>
-                  <TableCell>{format(record.date, "dd/MM/yyyy", { locale: es })}</TableCell>
-                  <TableCell>{record.source}</TableCell>
-                  <TableCell className="text-right">{formatCurrencyCLP(record.netAmount)}</TableCell>
-                  <TableCell className="text-right">{formatCurrencyCLP(record.ivaAmount)}</TableCell>
-                  <TableCell className="text-right font-medium">{formatCurrencyCLP(record.amount)}</TableCell>
-                  <TableCell>{record.description || '-'}</TableCell>
-                  <TableCell className="text-right space-x-1">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(record)}>
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(record.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              )) : (
+          <div className="overflow-x-auto">
+            <Table className="w-full min-w-[900px]">
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center h-24">
-                    No hay ingresos registrados para el rango de fechas seleccionado.
-                  </TableCell>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Fuente</TableHead>
+                  <TableHead className="text-right">Monto Neto (sin IVA)</TableHead>
+                  <TableHead className="text-right">IVA ({VAT_RATE * 100}%)</TableHead>
+                  <TableHead className="text-right">Monto Total (con IVA)</TableHead>
+                  <TableHead>Descripción</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredIncomeRecords.length > 0 ? filteredIncomeRecords.map((record) => (
+                  <TableRow key={record.id}>
+                    <TableCell>{format(record.date, "dd/MM/yyyy", { locale: es })}</TableCell>
+                    <TableCell>{record.source}</TableCell>
+                    <TableCell className="text-right">{formatCurrencyCLP(record.netAmount)}</TableCell>
+                    <TableCell className="text-right">{formatCurrencyCLP(record.ivaAmount)}</TableCell>
+                    <TableCell className="text-right font-medium">{formatCurrencyCLP(record.amount)}</TableCell>
+                    <TableCell>{record.description || '-'}</TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(record)}>
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(record.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center h-24">
+                      No hay ingresos registrados para el rango de fechas seleccionado.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
          <CardFooter className="grid grid-cols-1 md:grid-cols-3 gap-4 text-right font-semibold">
             <div>Total Neto (sin IVA): {formatCurrencyCLP(totalNetAmount)}</div>

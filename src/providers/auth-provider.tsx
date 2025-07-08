@@ -1,13 +1,14 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 type AuthContextType = {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (username: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,62 +20,92 @@ const VALID_CREDENTIALS = {
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null = loading
+  const [isLoading, setIsLoading] = useState(true);
+  const pathname = usePathname();
 
-  // Función para verificar autenticación
-  const checkAuth = (): boolean => {
-    if (typeof document === 'undefined') return false;
-    
-    const cookies = document.cookie.split(';').map(cookie => cookie.trim());
-    const sessionCookie = cookies.find(cookie => cookie.startsWith('session='));
-    
-    return sessionCookie !== undefined && sessionCookie.includes('true');
-  };
-
-  // Efecto para verificar autenticación al cargar
+  // Verifica la cookie en cada render inicial y cuando cambie la ruta
   useEffect(() => {
-    const isAuth = checkAuth();
-    setIsAuthenticated(isAuth);
-  }, []);
+    setIsLoading(true);
+    
+    const checkAuth = async () => {
+      try {
+        console.log('DEBUG AuthProvider: Verificando autenticación...');
+        const response = await fetch('/api/auth/verify');
+        const data = await response.json();
+        
+        console.log('DEBUG AuthProvider: Respuesta del servidor =', data);
+        
+        setIsAuthenticated(data.authenticated);
+      } catch (error) {
+        console.error('Error verificando autenticación:', error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkAuth();
+  }, [pathname]);
 
   const login = async (username: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await response.json();
+    setIsLoading(false);
+    if (response.ok && data.success) {
+      window.location.reload(); // Recarga la app para sincronizar frontend y middleware
+      return true;
+    }
+    throw new Error(data.error || 'Error desconocido al iniciar sesión');
+  };
+
+  const logout = async () => {
     try {
       setIsLoading(true);
       
-      const response = await fetch('/api/login', {
+      // Llamar al endpoint de logout del servidor
+      const response = await fetch('/api/logout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ username, password }),
       });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setIsAuthenticated(true);
-        router.push('/dashboard');
-        return true;
-      }
-
-      throw new Error(data.error || 'Error desconocido al iniciar sesión');
       
+      if (response.ok) {
+        // Actualizar el estado local
+        setIsAuthenticated(false);
+        
+        // Redirigir al login
+        window.location.href = '/login';
+      } else {
+        console.error('Error al cerrar sesión en el servidor');
+        // Fallback: eliminar cookie del cliente y recargar
+        document.cookie = `session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+        setIsAuthenticated(false);
+        window.location.reload();
+      }
     } catch (error) {
-      console.error('Error en proceso de login:', error);
-      throw error;
+      console.error('Error al cerrar sesión:', error);
+      // Fallback: eliminar cookie del cliente y recargar
+      document.cookie = `session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+      setIsAuthenticated(false);
+      window.location.reload();
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    // Eliminar la cookie de sesión
-    document.cookie = `session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
-    
-    setIsAuthenticated(false);
-    router.push('/login');
-  };
+  if (isAuthenticated === null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout }}>
