@@ -2,12 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
 // PUT: Actualizar orden/cotización
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest, context: { params: { id: string } }) {
   try {
-    const { id } = params;
+    const { id } = context.params;
     const data = await req.json();
     
     const { customerName, rut, telefono, description } = data;
@@ -41,12 +38,9 @@ export async function PUT(
 }
 
 // DELETE: Eliminar orden/cotización
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
   try {
-    const { id } = params;
+    const { id } = context.params;
 
     // Validar que la orden existe
     const existingOrder = await prisma.order.findUnique({
