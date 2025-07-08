@@ -147,7 +147,7 @@ export default function QuotationsPage() {
     }
 
     // Título principal con estilo profesional
-    pdf.setFillColor(...primaryColor);
+    pdf.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     pdf.rect(0, yPosition - 5, pageWidth, 15, 'F');
     pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(18);
@@ -159,15 +159,15 @@ export default function QuotationsPage() {
     yPosition += 25;
 
     // Información de la empresa
-    pdf.setFillColor(...lightGray);
+    pdf.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
     pdf.rect(20, yPosition - 5, pageWidth - 40, 35, 'F');
     pdf.setFontSize(14);
     pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(...primaryColor);
+    pdf.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     pdf.text(companySettings.nombre, 25, yPosition);
     yPosition += 8;
     pdf.setFontSize(10);
-    pdf.setTextColor(...secondaryColor);
+    pdf.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
     pdf.text(`RUT: ${companySettings.rut}`, 25, yPosition);
     yPosition += 6;
     pdf.text(`Teléfono: ${companySettings.telefono}`, 25, yPosition);
@@ -181,20 +181,20 @@ export default function QuotationsPage() {
     const fecha = new Date().toLocaleDateString('es-CL');
     const cotizacionId = `COT-${Date.now().toString().slice(-6)}`;
     pdf.setFontSize(10);
-    pdf.setTextColor(...secondaryColor);
+    pdf.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
     pdf.text(`Fecha: ${fecha}`, pageWidth - 25, yPosition - 10, { align: "right" });
     pdf.text(`Cotización: ${cotizacionId}`, pageWidth - 25, yPosition - 5, { align: "right" });
 
     // Datos del cliente
-    pdf.setFillColor(...lightGray);
+    pdf.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
     pdf.rect(20, yPosition - 5, pageWidth - 40, 25, 'F');
     pdf.setFontSize(12);
     pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(...primaryColor);
+    pdf.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     pdf.text("DATOS DEL CLIENTE", 25, yPosition);
     yPosition += 8;
     pdf.setFontSize(10);
-    pdf.setTextColor(...secondaryColor);
+    pdf.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
     pdf.text(`Nombre: ${customerName}`, 25, yPosition);
     yPosition += 6;
     pdf.text(`RUT: ${rut}`, 25, yPosition);
@@ -203,7 +203,7 @@ export default function QuotationsPage() {
     yPosition += 15;
 
     // Tabla de productos con diseño profesional
-    pdf.setFillColor(...primaryColor);
+    pdf.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     pdf.rect(20, yPosition - 5, pageWidth - 40, 10, 'F');
     pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(11);
@@ -218,7 +218,7 @@ export default function QuotationsPage() {
     yPosition += 12;
 
     // Línea separadora
-    pdf.setDrawColor(...primaryColor);
+    pdf.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     pdf.line(20, yPosition, pageWidth - 20, yPosition);
     yPosition += 5;
 
@@ -249,18 +249,18 @@ export default function QuotationsPage() {
 
     // Totales con diseño profesional
     yPosition += 5;
-    pdf.setDrawColor(...primaryColor);
+    pdf.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     pdf.setLineWidth(0.5);
     pdf.line(20, yPosition, pageWidth - 20, yPosition);
     yPosition += 8;
     
     // Fondo para totales
-    pdf.setFillColor(...lightGray);
+    pdf.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
     pdf.rect(120, yPosition - 5, 70, 25, 'F');
     
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(10);
-    pdf.setTextColor(...secondaryColor);
+    pdf.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
     pdf.text("Subtotal Neto:", pageWidth - 80, yPosition, { align: "right" });
     pdf.text(totalNet.toLocaleString(), pageWidth - 25, yPosition, { align: "right" });
     yPosition += 6;
@@ -270,17 +270,17 @@ export default function QuotationsPage() {
     yPosition += 6;
     
     pdf.setFontSize(12);
-    pdf.setTextColor(...primaryColor);
+    pdf.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     pdf.text("TOTAL:", pageWidth - 80, yPosition, { align: "right" });
     pdf.text(total.toLocaleString(), pageWidth - 25, yPosition, { align: "right" });
 
     // Pie de página
     yPosition = pageHeight - 20;
-    pdf.setDrawColor(...lightGray);
+    pdf.setDrawColor(lightGray[0], lightGray[1], lightGray[2]);
     pdf.line(20, yPosition, pageWidth - 20, yPosition);
     yPosition += 5;
     pdf.setFontSize(8);
-    pdf.setTextColor(...secondaryColor);
+    pdf.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
     pdf.text("Esta cotización tiene una validez de 30 días desde la fecha de emisión.", pageWidth / 2, yPosition, { align: "center" });
     yPosition += 4;
     pdf.text("Para consultas, contacte a nuestra empresa.", pageWidth / 2, yPosition, { align: "center" });
