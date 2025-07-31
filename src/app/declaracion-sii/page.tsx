@@ -15,7 +15,6 @@ import { formatCurrencyCLP } from "@/lib/utils";
 // Simulación: importar ingresos y egresos desde el frontend (reemplazar por fetch a BD en producción)
 import type { IncomeRecord, ExpenseRecord } from "@/lib/types";
 
-
 export default function DeclaracionSiiPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
@@ -50,17 +49,11 @@ export default function DeclaracionSiiPage() {
       setLoading(false);
     }
     fetchData();
-  }, [dateRange]);
+}, [dateRange]);
 
-export default function DeclaracionSiiPage() {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-    to: new Date(),
-  });
-
-  // Los datos ya vienen filtrados por rango desde la API
-  const filteredIncome = income;
-  const filteredExpenses = expenses;
+// Los datos ya vienen filtrados por rango desde la API
+const filteredIncome = income;
+const filteredExpenses = expenses;
 
   // Cálculos ingresos
   const totalIncome = useMemo(() => filteredIncome.reduce((sum, r) => sum + r.amount, 0), [filteredIncome]);
