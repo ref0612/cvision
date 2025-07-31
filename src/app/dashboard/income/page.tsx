@@ -93,12 +93,36 @@ export default function IncomePage() {
 
     if (editingId) {
       setIncomeRecords(incomeRecords.map(rec => rec.id === editingId ? newRecord : rec));
+      setIsDialogOpen(false);
+      setCurrentIncome({ date: new Date() });
+      setEditingId(null);
     } else {
-      setIncomeRecords([...incomeRecords, newRecord].sort((a, b) => b.date.getTime() - a.date.getTime()));
+      // Persist to API
+      fetch('/api/income', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: newRecord.date,
+          source: newRecord.source,
+          amount: newRecord.amount,
+          netAmount: newRecord.netAmount,
+          ivaAmount: newRecord.ivaAmount,
+          description: newRecord.description,
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (!data.error) {
+            setIncomeRecords([...incomeRecords, { ...data, id: data.id || crypto.randomUUID() }].sort((a, b) => b.date.getTime() - a.date.getTime()));
+            setIsDialogOpen(false);
+            setCurrentIncome({ date: new Date() });
+            setEditingId(null);
+          } else {
+            alert('Error al registrar ingreso');
+          }
+        })
+        .catch(() => alert('Error al registrar ingreso'));
     }
-    setIsDialogOpen(false);
-    setCurrentIncome({ date: new Date() });
-    setEditingId(null);
   };
 
   const handleEdit = (record: IncomeRecord) => {

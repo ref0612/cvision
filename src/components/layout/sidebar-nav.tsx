@@ -19,6 +19,7 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/income', label: 'Ingresos', icon: DollarSign },
   { href: '/dashboard/expenses', label: 'Egresos', icon: CreditCard },
+  { href: '/dashboard/declaracion-sii', label: 'Declaración SII', icon: BarChartBig },
   { href: '/dashboard/inventory', label: 'Inventario', icon: Archive },
   { href: '/dashboard/orders', label: 'Pedidos', icon: ShoppingBag },
   { href: '/dashboard/cost-analysis', label: 'Análisis de Costos', icon: BarChartBig },

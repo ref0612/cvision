@@ -1,3 +1,22 @@
+// Modelo para ingresos (income)
+model Income {
+  id         String   @id @default(uuid())
+  date       DateTime @default(now())
+  source     String
+  amount     Float    // Monto total con IVA
+  netAmount  Float    // Neto sin IVA
+  ivaAmount  Float    // IVA
+  description String?
+}
+// Modelo para egresos (expenses)
+model Expense {
+  id          String   @id @default(uuid())
+  date        DateTime @default(now())
+  category    String
+  amount      Float
+  hasInvoice  Boolean  @default(false)
+  description String?
+}
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 

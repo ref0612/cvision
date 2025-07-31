@@ -20,11 +20,11 @@ import { formatCurrencyCLP } from '@/lib/utils';
 
 // Mock Data
 const initialExpenseRecords: ExpenseRecord[] = [
-  { id: '1', date: new Date(2024, 0, 10), category: 'Costos Operativos', amount: 300000, description: 'Alquiler Enero' },
-  { id: '2', date: new Date(2024, 1, 5), category: 'Marketing', amount: 100000, description: 'Publicidad Febrero' },
-  { id: '3', date: new Date(2024, 6, 2), category: 'Costos Operativos', amount: 350000, description: 'Alquiler oficina' },
-  { id: '4', date: new Date(2024, 6, 6), category: 'Marketing', amount: 150000, description: 'Publicidad online' },
-  { id: '5', date: new Date(2024, 6, 12), category: 'Suministros', amount: 75200, description: 'Material de oficina' },
+  { id: '1', date: new Date(2024, 0, 10), category: 'Costos Operativos', amount: 300000, hasInvoice: false, description: 'Alquiler Enero' },
+  { id: '2', date: new Date(2024, 1, 5), category: 'Marketing', amount: 100000, hasInvoice: false, description: 'Publicidad Febrero' },
+  { id: '3', date: new Date(2024, 6, 2), category: 'Costos Operativos', amount: 350000, hasInvoice: false, description: 'Alquiler oficina' },
+  { id: '4', date: new Date(2024, 6, 6), category: 'Marketing', amount: 150000, hasInvoice: false, description: 'Publicidad online' },
+  { id: '5', date: new Date(2024, 6, 12), category: 'Suministros', amount: 75200, hasInvoice: false, description: 'Material de oficina' },
 ];
 
 const expenseCategories = ["Costos Operativos", "Marketing", "Suministros", "Salarios", "Servicios Públicos", "Otros"];
@@ -34,6 +34,7 @@ export default function ExpensesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentExpense, setCurrentExpense] = useState<Partial<ExpenseRecord>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [hasInvoice, setHasInvoice] = useState(false);
 
   const defaultDateRangeFrom = startOfMonth(addMonths(new Date(), -5));
   const defaultDateRangeTo = endOfMonth(new Date());
@@ -67,19 +68,43 @@ export default function ExpensesPage() {
     const newRecord: ExpenseRecord = {
       id: editingId || crypto.randomUUID(),
       date: currentExpense.date || new Date(),
-      category: currentExpense.category || formData.get('categoryFallback') as string, 
+      category: currentExpense.category || formData.get('categoryFallback') as string,
       amount: Math.round(parseFloat(formData.get('amount') as string)),
+      hasInvoice: formData.get('hasInvoice') === 'on',
       description: formData.get('description') as string | undefined,
     };
 
     if (editingId) {
       setExpenseRecords(expenseRecords.map(rec => rec.id === editingId ? newRecord : rec));
+      setIsDialogOpen(false);
+      setCurrentExpense({});
+      setEditingId(null);
     } else {
-      setExpenseRecords([...expenseRecords, newRecord].sort((a,b) => b.date.getTime() - a.date.getTime()));
+      // Persist to API
+      fetch('/api/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: newRecord.date,
+          category: newRecord.category,
+          amount: newRecord.amount,
+          hasInvoice: newRecord.hasInvoice,
+          description: newRecord.description,
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (!data.error) {
+            setExpenseRecords([...expenseRecords, { ...data, id: data.id || crypto.randomUUID() }].sort((a,b) => b.date.getTime() - a.date.getTime()));
+            setIsDialogOpen(false);
+            setCurrentExpense({});
+            setEditingId(null);
+          } else {
+            alert('Error al registrar egreso');
+          }
+        })
+        .catch(() => alert('Error al registrar egreso'));
     }
-    setIsDialogOpen(false);
-    setCurrentExpense({});
-    setEditingId(null);
   };
 
   const handleEdit = (record: ExpenseRecord) => {
@@ -205,6 +230,16 @@ export default function ExpensesPage() {
                   <Label htmlFor="description">Descripción (Opcional)</Label>
                   <Textarea id="description" name="description" defaultValue={currentExpense.description} />
                 </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="hasInvoice"
+                    name="hasInvoice"
+                    checked={!!currentExpense.hasInvoice}
+                    onChange={e => setCurrentExpense(prev => ({ ...prev, hasInvoice: e.target.checked }))}
+                  />
+                  <Label htmlFor="hasInvoice">¿Tiene factura?</Label>
+                </div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
                   <Button type="submit">{editingId ? 'Actualizar' : 'Guardar'} Egreso</Button>
@@ -228,6 +263,7 @@ export default function ExpensesPage() {
                   <TableHead>Fecha</TableHead>
                   <TableHead>Categoría</TableHead>
                   <TableHead className="text-right">Monto</TableHead>
+                  <TableHead>Factura</TableHead>
                   <TableHead>Descripción</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
@@ -238,6 +274,7 @@ export default function ExpensesPage() {
                     <TableCell>{format(record.date, "dd/MM/yyyy", { locale: es })}</TableCell>
                     <TableCell>{record.category}</TableCell>
                     <TableCell className="text-right font-medium">{formatCurrencyCLP(record.amount)}</TableCell>
+                    <TableCell>{record.hasInvoice ? 'Sí' : 'No'}</TableCell>
                     <TableCell>{record.description || '-'}</TableCell>
                     <TableCell className="text-right space-x-2">
                        <Button variant="ghost" size="icon" onClick={() => handleEdit(record)}>

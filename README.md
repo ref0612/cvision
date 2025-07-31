@@ -1,71 +1,104 @@
-# ContableVision
-
-Sistema de gestión integral de inventario, finanzas y costos.
-
-## Estado del Proyecto
-
-✅ **Base de datos conectada**: Neon.tech PostgreSQL  
-✅ **Autenticación funcionando**: Sistema de login con cookies  
-✅ **Middleware configurado**: Protección de rutas  
-✅ **Modelos de datos**: Usuarios, inventario, productos vendibles  
-
-## Credenciales de Desarrollo
-
-- **Usuario**: `admin`
-- **Contraseña**: `admin123`
-
-## Tecnologías
-
-- **Frontend**: Next.js 15, React 18, TypeScript
-- **UI**: Tailwind CSS, Radix UI
-- **Base de datos**: PostgreSQL (Neon.tech)
-- **ORM**: Prisma
-- **Autenticación**: Cookies HTTP-only
-
-## Estructura del Proyecto
-
-```
 src/
 ├── app/                    # App Router de Next.js
 │   ├── api/               # Endpoints de API
 │   ├── dashboard/         # Páginas del dashboard
 │   └── login/             # Página de login
-├── components/            # Componentes reutilizables
-├── lib/                   # Utilidades y configuración
-├── providers/             # Context providers
-└── middleware.ts          # Middleware de autenticación
+
+# ContableVision
+
+Sistema web para gestión contable, inventario y declaración tributaria para pymes y emprendedores.
+
+## Objetivo
+Centralizar el registro de ingresos, egresos, inventario y generar automáticamente el resumen fiscal tipo SII.
+
+## Usuarios
+Empresas, contadores, administradores y emprendedores.
+
+## Módulos principales
+- **Ingresos:** Registro y cálculo automático de IVA y neto.
+- **Egresos:** Registro de gastos, cálculo de IVA crédito.
+- **Inventario:** Gestión de productos y stock.
+- **Pedidos:** Registro y control de órdenes.
+- **Declaración SII:** Resumen tributario mensual con IVA a pagar/saldo a favor.
+- **Análisis de Costos, Cotizaciones, Historial, Configuración de Empresa.**
+
+## Estructura de datos
+### IncomeRecord
+```typescript
+{
+  id: string;
+  date: Date;
+  source: string;
+  amount: number;
+  netAmount: number;
+  ivaAmount: number;
+  description?: string;
+}
+```
+### ExpenseRecord
+```typescript
+{
+  id: string;
+  date: Date;
+  category: string;
+  amount: number;
+  hasInvoice: boolean;
+  description?: string;
+}
 ```
 
-## Comandos Útiles
+## Tecnologías
+- **Frontend:** Next.js 15, React 18, TypeScript
+- **UI:** Tailwind CSS, Radix UI, Lucide Icons
+- **Backend:** Next.js API routes, Prisma ORM
+- **Base de datos:** PostgreSQL (Neon.tech)
+- **Autenticación:** Cookies HTTP-only, middleware de sesión
 
+## Arquitectura
+- Monolito modular con App Router de Next.js
+- API RESTful para sincronización frontend-backend
+
+## Estructura del Proyecto
+```
+src/
+├── app/
+│   ├── api/
+│   ├── dashboard/
+│   └── login/
+├── components/
+├── lib/
+├── providers/
+└── middleware.ts
+```
+
+## Flujos principales
+- Registro, edición y eliminación de ingresos/egresos
+- Cálculo automático de IVA y utilidad
+- Filtros por rango de fechas
+- Resumen fiscal mensual (Declaración SII)
+- Protección de rutas y autenticación
+
+## Comandos útiles
 ```bash
 # Desarrollo
 npm run dev
-
-# Generar cliente de Prisma
-npx prisma generate
-
-# Ejecutar migraciones
-npx prisma migrate dev
-
-# Crear usuario administrador
-npx ts-node prisma/create-admin-user.ts
-
-# Abrir Prisma Studio
-npx prisma studio
+# Generar cliente Prisma	npx prisma generate
+# Migraciones		npx prisma migrate dev
+# Crear admin		npx ts-node prisma/create-admin-user.ts
+# Abrir Prisma Studio	npx prisma studio
 ```
 
-## Problemas Solucionados
+## Seguridad
+- Autenticación por cookies y middleware
+- Protección de rutas privadas
+- Contraseñas (deben hashearse en producción)
 
-1. **Loop infinito en login**: Eliminadas verificaciones redundantes de autenticación
-2. **Middleware conflictivo**: Configurado correctamente para proteger rutas específicas
-3. **Cookies de sesión**: Simplificada la configuración para evitar problemas de dominio
-4. **Base de datos**: Agregado modelo de usuario y migración correspondiente
+## Próximos pasos
+- [ ] Hash de contraseñas
+- [ ] Validación avanzada de formularios
+- [ ] Roles y permisos
+- [ ] Tests unitarios y de integración
+- [ ] CI/CD y despliegue automático
 
-## Próximos Pasos
-
-- [ ] Implementar hash de contraseñas con bcrypt
-- [ ] Agregar validación de formularios con Zod
-- [ ] Implementar roles y permisos
-- [ ] Agregar tests unitarios
-- [ ] Configurar CI/CD
+## Contacto y soporte
+Para dudas, sugerencias o soporte, abre un issue en el repositorio o contacta al equipo técnico.

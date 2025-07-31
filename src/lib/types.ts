@@ -15,6 +15,7 @@ export interface ExpenseRecord {
   date: Date;
   category: string; // e.g., operating costs, marketing
   amount: number;
+  hasInvoice: boolean; // true si el gasto fue con factura (recupera IVA)
   description?: string;
 }
 
