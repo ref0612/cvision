@@ -56,10 +56,17 @@ export async function DELETE(req: NextRequest) {
     if (existingOrder.status === 'COTIZACION_ENVIADA') {
       for (const item of existingOrder.items) {
         if (item.productId) {
-          await prisma.inventoryItem.update({
-            where: { id: item.productId },
-            data: { quantity: { increment: item.quantity } },
+          const inventoryItem = await prisma.inventoryItem.findUnique({
+            where: { id: item.productId }
           });
+          if (inventoryItem) {
+            await prisma.inventoryItem.update({
+              where: { id: item.productId },
+              data: { quantity: { increment: item.quantity } },
+            });
+          } else {
+            console.warn(`Producto con id ${item.productId} no existe en inventario, no se puede desbloquear stock.`);
+          }
         }
       }
     }
